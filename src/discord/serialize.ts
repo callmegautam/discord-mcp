@@ -1,13 +1,18 @@
 import {
+  AuditLogEvent,
   ChannelType,
   GuildVerificationLevel,
   type Guild,
   type GuildBasedChannel,
   OverwriteType,
+  type GuildAuditLogsEntry,
+  type GuildBan,
   type GuildMember,
   type PermissionOverwrites,
   type Role,
+  type User,
 } from "discord.js";
+import { plainAuditExtra } from "./moderation";
 
 export function serializeGuildSummary(guild: Guild) {
   return { id: guild.id, name: guild.name, memberCount: guild.memberCount };
@@ -81,5 +86,32 @@ export function serializeOverwrite(
     name,
     allow: overwrite.allow.toArray(),
     deny: overwrite.deny.toArray(),
+  };
+}
+
+export function serializeUser(user: User) {
+  return { id: user.id, username: user.username, bot: user.bot };
+}
+
+export function serializeBan(ban: GuildBan) {
+  return { user: serializeUser(ban.user), reason: ban.reason ?? null };
+}
+
+export function serializeAuditLogEntry(entry: GuildAuditLogsEntry) {
+  return {
+    id: entry.id,
+    action: AuditLogEvent[entry.action],
+    createdAt: entry.createdAt.toISOString(),
+    executorId: entry.executorId,
+    executorName: entry.executor?.username ?? null,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    reason: entry.reason,
+    changes: entry.changes.map((change) => ({
+      key: change.key,
+      old: change.old ?? null,
+      new: change.new ?? null,
+    })),
+    extra: plainAuditExtra(entry.extra),
   };
 }

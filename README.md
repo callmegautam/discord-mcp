@@ -26,12 +26,21 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `move_role`                 | Place a role directly above or below another role                         |
 | `list_members`              | Members in pages of up to 1000                                            |
 | `get_member`                | One member with roles and timeout status                                  |
+| `search_members`            | Members whose username or nickname starts with a query                    |
+| `set_nickname`              | Set or clear a member's nickname, or the bot's own                        |
 | `add_member_role`           | Give a member a role                                                      |
 | `remove_member_role`        | Take a role away from a member                                            |
+| `kick_member`               | Remove a member from the server                                           |
+| `ban_user`                  | Ban a user, member or not, and optionally delete up to 7 days of messages |
+| `unban_user`                | Lift a ban                                                                |
+| `list_bans`                 | Banned users with the ban reason, in pages of up to 1000                  |
+| `timeout_member`            | Time out a member for up to 28 days                                       |
+| `remove_timeout`            | End a timeout early                                                       |
+| `get_audit_log`             | Audit log entries, filtered by action and by who did it                   |
 
 Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GUILD_ID`, or the only server the bot is in.
 
-Every write tool takes an optional `reason` that shows up in the server audit log. Moderation and message tools are coming, see [CHANGELOG.md](CHANGELOG.md).
+Every write tool takes an optional `reason` that shows up in the server audit log. Message tools are coming, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Safety
 
@@ -56,8 +65,8 @@ Write tools check permissions and role order before calling Discord. When the bo
 1. Create an application at https://discord.com/developers/applications and add a bot under the **Bot** tab.
 2. Copy the bot token.
 3. Under **Privileged Gateway Intents**, enable **Server Members Intent**.
-4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, and the permission overwrite and role tools need **Manage Roles**. Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
-5. In your server settings, drag the bot's role above any role you want it to manage. Role tools refuse roles at or above the bot's highest role, and roles managed by an integration.
+4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, the permission overwrite and role tools need **Manage Roles**, and the moderation tools need **Kick Members**, **Ban Members**, **Moderate Members** (timeouts), **Manage Nicknames** and **View Audit Log**. Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
+5. In your server settings, drag the bot's role above any role you want it to manage. Role tools refuse roles at or above the bot's highest role, and roles managed by an integration. Moderation tools refuse members whose highest role is at or above the bot's, and the server owner.
 
 ### 2. Configure
 

@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-21
+
+### Added
+
+- Moderation tools: `kick_member`, `ban_user`, `unban_user`, `list_bans`, `timeout_member`, `remove_timeout`
+- `ban_user` works for users who are not in the server and can delete up to 7 days of their messages
+- `set_nickname` sets or clears a member's nickname, including the bot's own
+- `search_members` finds members by the start of their username or nickname
+- `get_audit_log` reads the audit log, filtered by action and by who did it, with paging
+- Prechecks name the missing Kick Members, Ban Members, Moderate Members, Manage Nicknames or View Audit Log permission, members at or above the bot's highest role, and members with Administrator, who can't be timed out
+
 ## [0.4.0] - 2026-10-21
 
 ### Added
@@ -49,7 +60,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/callmegautam/discord-mcp/compare/v0.1.0...v0.2.0

@@ -4,6 +4,7 @@ import {
   compareRoles,
   permissionName,
   requireMemberBelowBot,
+  requireNotAdministrator,
   requirePermissions,
   requirePermissionsToGrant,
   requireRoleBelowBot,
@@ -118,5 +119,19 @@ describe("requireMemberBelowBot", () => {
 
   test("refuses the bot itself", () => {
     expect(() => requireMemberBelowBot(ownerId, bot, { ...bot })).toThrow("itself");
+  });
+});
+
+describe("requireNotAdministrator", () => {
+  test("passes for a member without Administrator", () => {
+    const perms = new PermissionsBitField(PermissionFlagsBits.KickMembers);
+    expect(() => requireNotAdministrator("sam", perms)).not.toThrow();
+  });
+
+  test("refuses a member with Administrator", () => {
+    const perms = new PermissionsBitField(PermissionFlagsBits.Administrator);
+    expect(() => requireNotAdministrator("sam", perms)).toThrow(
+      "sam has Administrator and can't be timed out.",
+    );
   });
 });

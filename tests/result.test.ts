@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { DiscordAPIError } from "discord.js";
 import { run, UserError } from "../src/lib/result";
 
 describe("run", () => {
@@ -14,6 +15,26 @@ describe("run", () => {
     });
     expect(result.isError).toBe(true);
     expect(result.content).toEqual([{ type: "text", text: "pick a server" }]);
+  });
+
+  test("adds a hint to Missing Permissions errors", async () => {
+    const result = await run(() => {
+      throw new DiscordAPIError(
+        { code: 50013, message: "Missing Permissions" },
+        50013,
+        403,
+        "PUT",
+        "/guilds/1/members/2/roles/3",
+        {},
+      );
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual([
+      {
+        type: "text",
+        text: "Discord API error 50013 (HTTP 403): Missing Permissions. The bot lacks a permission for this, or the target is at or above the bot's highest role in Server Settings > Roles.",
+      },
+    ]);
   });
 
   test("reports unexpected errors without throwing", async () => {

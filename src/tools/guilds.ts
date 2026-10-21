@@ -2,17 +2,18 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { serializeGuild, serializeGuildSummary } from "../discord/serialize";
 import { run } from "../lib/result";
 import { guildIdArg } from "../lib/schemas";
-import { getGuild, type ToolContext } from "./context";
+import { allowedGuilds, getGuild, type ToolContext } from "./context";
 
 export function registerGuildTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
     "list_guilds",
     {
       title: "List servers",
-      description: "List every Discord server the bot is a member of.",
+      description:
+        "List every Discord server the bot is a member of, limited to ALLOWED_GUILD_IDS when that is set.",
       annotations: { readOnlyHint: true },
     },
-    () => run(() => ctx.client.guilds.cache.map(serializeGuildSummary)),
+    () => run(() => allowedGuilds(ctx).map(serializeGuildSummary)),
   );
 
   server.registerTool(

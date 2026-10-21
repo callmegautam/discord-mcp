@@ -3,11 +3,15 @@ import { registerChannelTools } from "./channels";
 import type { ToolContext } from "./context";
 import { registerGuildTools } from "./guilds";
 import { registerMemberTools } from "./members";
+import { applyToolPolicy, trackTools } from "./policy";
 import { registerRoleTools } from "./roles";
 
-export function registerTools(server: McpServer, ctx: ToolContext): void {
-  registerGuildTools(server, ctx);
-  registerChannelTools(server, ctx);
-  registerRoleTools(server, ctx);
-  registerMemberTools(server, ctx);
+/** Registers every tool, then applies READ_ONLY and DISABLED_TOOLS. Returns the active tool names. */
+export function registerTools(server: McpServer, ctx: ToolContext): string[] {
+  const { server: tracked, tools } = trackTools(server);
+  registerGuildTools(tracked, ctx);
+  registerChannelTools(tracked, ctx);
+  registerRoleTools(tracked, ctx);
+  registerMemberTools(tracked, ctx);
+  return applyToolPolicy(tools, ctx.config);
 }

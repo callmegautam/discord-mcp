@@ -99,6 +99,23 @@ export function rankMember(member: GuildMember): RankedMember {
   return { id: member.id, displayName: member.displayName, highestRole: member.roles.highest };
 }
 
+/** Discord refuses to time out members with Administrator, whatever the role order. */
+export function requireNotAdministrator(
+  displayName: string,
+  permissions: Readonly<PermissionsBitField>,
+): void {
+  if (permissions.has(PermissionFlagsBits.Administrator)) {
+    throw new UserError(`${displayName} has Administrator and can't be timed out.`);
+  }
+}
+
+/** The permission plus a member below the bot, which kicking, banning, timing out and renaming need. */
+export function requireModeratableMember(guild: Guild, member: GuildMember, permission: bigint): void {
+  const me = botMember(guild);
+  requirePermissions(me.permissions, [permission]);
+  requireMemberBelowBot(guild.ownerId, rankMember(me), rankMember(member));
+}
+
 /** Manage Roles plus a role below the bot's highest, which editing, deleting and assigning a role need. */
 export function requireManageableRole(guild: Guild, role: Role): void {
   const me = botMember(guild);

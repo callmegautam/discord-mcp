@@ -8,9 +8,11 @@ import {
   type Client,
   type Collection,
   type Guild,
+  type GuildBan,
   type GuildMember,
   type NonThreadGuildBasedChannel,
   type Role,
+  type User,
 } from "discord.js";
 import type { Config } from "../config";
 import { isGuildAllowed, resolveGuild } from "../discord/resolve";
@@ -68,11 +70,32 @@ export async function getRole(guild: Guild, roleId: string): Promise<Role> {
   return role;
 }
 
-export async function getMember(guild: Guild, userId: string): Promise<GuildMember> {
-  const member = await guild.members.fetch(userId).catch((error: unknown) => {
+export async function findMember(guild: Guild, userId: string): Promise<GuildMember | null> {
+  return guild.members.fetch(userId).catch((error: unknown) => {
     if (isNotFound(error, [RESTJSONErrorCodes.UnknownMember, RESTJSONErrorCodes.UnknownUser])) return null;
     throw error;
   });
+}
+
+export async function getMember(guild: Guild, userId: string): Promise<GuildMember> {
+  const member = await findMember(guild, userId);
   if (!member) throw new UserError(`No member with ID ${userId} in ${guild.name}.`);
   return member;
+}
+
+export async function getUser(client: Client, userId: string): Promise<User> {
+  const user = await client.users.fetch(userId).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownUser])) return null;
+    throw error;
+  });
+  if (!user) throw new UserError(`No Discord user with ID ${userId}.`);
+  return user;
+}
+
+/** Needs Ban Members. */
+export async function findBan(guild: Guild, userId: string): Promise<GuildBan | null> {
+  return guild.bans.fetch({ user: userId, force: true }).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownBan])) return null;
+    throw error;
+  });
 }

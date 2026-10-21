@@ -1,6 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { requireManageableRole } from "../discord/guards";
+import { PermissionFlagsBits } from "discord.js";
+import {
+  botMember,
+  requireManageableRole,
+  requireModeratableMember,
+  requirePermissions,
+} from "../discord/guards";
 import { serializeMember } from "../discord/serialize";
 import { run, UserError } from "../lib/result";
 import { guildIdArg, reasonArg, snowflake } from "../lib/schemas";
@@ -41,6 +47,65 @@ export function registerMemberTools(server: McpServer, ctx: ToolContext): void {
     },
     ({ guild_id, user_id }) =>
       run(async () => serializeMember(await getGuild(ctx, guild_id).members.fetch(user_id))),
+  );
+
+  server.registerTool(
+    "search_members",
+    {
+      title: "Search members",
+      description: "Find members whose username or server nickname starts with the query, case insensitive.",
+      inputSchema: {
+        guild_id: guildIdArg,
+        query: z.string().trim().min(1).max(100).describe("Start of a username or nickname."),
+        limit: z.number().int().min(1).max(1000).default(25).describe("Most members to return, 1 to 1000."),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    ({ guild_id, query, limit }) =>
+      run(async () => {
+        const members = await getGuild(ctx, guild_id).members.search({ query, limit, cache: false });
+        return [...members.values()].map(serializeMember);
+      }),
+  );
+
+  server.registerTool(
+    "set_nickname",
+    {
+      title: "Set nickname",
+      description:
+        "Set or clear a member's server nickname, including the bot's own. Other members have to be below the bot's highest role.",
+      inputSchema: {
+        guild_id: guildIdArg,
+        user_id: userIdArg,
+        nickname: z
+          .string()
+          .trim()
+          .min(1)
+          .max(32)
+          .nullable()
+          .describe("New nickname, 1 to 32 characters. null clears it and shows the username again."),
+        reason: reasonArg,
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true },
+    },
+    ({ guild_id, user_id, nickname, reason }) =>
+      run(async () => {
+        const guild = getGuild(ctx, guild_id);
+        const member = await getMember(guild, user_id);
+        if (member.id === botMember(guild).id) {
+          requirePermissions(member.permissions, [PermissionFlagsBits.ChangeNickname]);
+        } else {
+          requireModeratableMember(guild, member, PermissionFlagsBits.ManageNicknames);
+        }
+        if (member.nickname === nickname) {
+          throw new UserError(
+            nickname === null
+              ? `${member.displayName} has no nickname.`
+              : `${member.displayName} already has that nickname.`,
+          );
+        }
+        return serializeMember(await member.setNickname(nickname, reason));
+      }),
   );
 
   server.registerTool(

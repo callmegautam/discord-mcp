@@ -93,8 +93,17 @@ describe("registerTools", () => {
       "move_role",
       "list_members",
       "get_member",
+      "search_members",
+      "set_nickname",
       "add_member_role",
       "remove_member_role",
+      "kick_member",
+      "ban_user",
+      "unban_user",
+      "list_bans",
+      "timeout_member",
+      "remove_timeout",
+      "get_audit_log",
     ]);
   });
 
@@ -109,6 +118,9 @@ describe("registerTools", () => {
       "list_role_members",
       "list_members",
       "get_member",
+      "search_members",
+      "list_bans",
+      "get_audit_log",
     ]);
   });
 });

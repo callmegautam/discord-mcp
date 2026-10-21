@@ -10,6 +10,7 @@ const defaults: Config = {
   defaultGuildId: undefined,
   allowedGuildIds: [],
   readOnly: false,
+  messageContent: false,
   disabledTools: [],
   logLevel: "info",
 };
@@ -22,6 +23,7 @@ describe("loadConfig", () => {
         DISCORD_GUILD_ID: guildId,
         ALLOWED_GUILD_IDS: `${guildId},${otherGuildId}`,
         READ_ONLY: "true",
+        MESSAGE_CONTENT: "true",
         DISABLED_TOOLS: "list_members,get_member",
         LOG_LEVEL: "debug",
       }),
@@ -30,6 +32,7 @@ describe("loadConfig", () => {
       defaultGuildId: guildId,
       allowedGuildIds: [guildId, otherGuildId],
       readOnly: true,
+      messageContent: true,
       disabledTools: ["list_members", "get_member"],
       logLevel: "debug",
     });
@@ -46,6 +49,7 @@ describe("loadConfig", () => {
         DISCORD_GUILD_ID: "",
         ALLOWED_GUILD_IDS: "",
         READ_ONLY: "",
+        MESSAGE_CONTENT: "",
         DISABLED_TOOLS: "",
         LOG_LEVEL: "",
       }),
@@ -98,6 +102,13 @@ describe("loadConfig", () => {
     expect(loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "false" }).readOnly).toBe(false);
     expect(loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "1" }).readOnly).toBe(true);
     expect(() => loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "maybe" })).toThrow("READ_ONLY");
+  });
+
+  test("parses MESSAGE_CONTENT as a boolean", () => {
+    expect(loadConfig({ DISCORD_TOKEN: token, MESSAGE_CONTENT: "true" }).messageContent).toBe(true);
+    expect(() => loadConfig({ DISCORD_TOKEN: token, MESSAGE_CONTENT: "yes please" })).toThrow(
+      "MESSAGE_CONTENT",
+    );
   });
 
   test("rejects tool names that are not snake_case", () => {

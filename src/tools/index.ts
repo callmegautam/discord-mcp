@@ -3,6 +3,7 @@ import { registerChannelTools } from "./channels";
 import type { ToolContext } from "./context";
 import { registerGuildTools } from "./guilds";
 import { registerMemberTools } from "./members";
+import { registerMessageTools } from "./messages";
 import { registerModerationTools } from "./moderation";
 import { applyToolPolicy, trackTools } from "./policy";
 import { registerRoleTools } from "./roles";
@@ -15,5 +16,6 @@ export function registerTools(server: McpServer, ctx: ToolContext): string[] {
   registerRoleTools(tracked, ctx);
   registerMemberTools(tracked, ctx);
   registerModerationTools(tracked, ctx);
+  registerMessageTools(tracked, ctx);
   return applyToolPolicy(tools, ctx.config);
 }

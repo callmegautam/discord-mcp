@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-21
+
+### Added
+
+- Message tools: `list_messages`, `get_message`, `send_message`, `edit_message`, `delete_message`, `bulk_delete_messages`
+- Pin tools: `list_pinned_messages`, `pin_message`, `unpin_message`
+- Reaction tools: `add_reaction`, `remove_reaction`, `clear_reactions`, `list_reactions`
+- `MESSAGE_CONTENT` setting that requests the privileged Message Content intent, off by default so the other tools don't need it
+- `send_message` and `edit_message` take up to 10 embeds and check Discord's text limits, `send_message` can reply to a message and doesn't ping `@everyone`, `@here` or roles unless `allow_mass_mentions` is true
+- `bulk_delete_messages` deletes by ID or the most recent messages, optionally from one user, and refuses or skips messages older than 14 days
+- Prechecks name the missing channel permission: Read Message History, Send Messages, Embed Links, Add Reactions, Pin Messages or Manage Messages
+- Hints on Discord errors 10014 (unknown emoji), 30003 (pin limit) and 50006 (empty message)
+- A clear startup error when Discord refuses a privileged intent that is not enabled in the developer portal
+
 ## [0.5.0] - 2026-10-21
 
 ### Added
@@ -60,7 +74,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...v0.3.0

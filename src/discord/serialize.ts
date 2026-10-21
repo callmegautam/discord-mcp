@@ -8,6 +8,8 @@ import {
   type GuildAuditLogsEntry,
   type GuildBan,
   type GuildMember,
+  type Message,
+  MessageType,
   type PermissionOverwrites,
   type Role,
   type User,
@@ -113,5 +115,36 @@ export function serializeAuditLogEntry(entry: GuildAuditLogsEntry) {
       new: change.new ?? null,
     })),
     extra: plainAuditExtra(entry.extra),
+  };
+}
+
+export function serializeMessage(message: Message) {
+  return {
+    id: message.id,
+    channelId: message.channelId,
+    author: serializeUser(message.author),
+    content: message.content,
+    type: MessageType[message.type],
+    createdAt: message.createdAt.toISOString(),
+    editedAt: message.editedAt?.toISOString() ?? null,
+    pinned: message.pinned,
+    replyToId: message.reference?.messageId ?? null,
+    embeds: message.embeds.map((embed) => ({
+      title: embed.title,
+      description: embed.description,
+      url: embed.url,
+      fields: embed.fields.map(({ name, value }) => ({ name, value })),
+    })),
+    attachments: message.attachments.map((attachment) => ({
+      name: attachment.name,
+      url: attachment.url,
+      size: attachment.size,
+      contentType: attachment.contentType,
+    })),
+    reactions: message.reactions.cache.map((reaction) => ({
+      emoji: reaction.emoji.toString(),
+      count: reaction.count,
+      byBot: reaction.me,
+    })),
   };
 }

@@ -8,9 +8,12 @@ export class UserError extends Error {
 }
 
 const ERROR_HINTS: Record<number, string> = {
+  10014: "Discord doesn't know this emoji. Custom emojis have to come from a server the bot is in.",
+  30003: "The channel has hit Discord's limit of pinned messages, unpin one first.",
   50001: "The bot can't see this channel or resource, check its role and the channel permission overwrites.",
   50013:
     "The bot lacks a permission for this, or the target is at or above the bot's highest role in Server Settings > Roles.",
+  50006: "A message needs content, an embed or an attachment, it can't end up empty.",
   50074:
     "Community servers need their rules and updates channels, pick other ones in Server Settings > Community first.",
 };

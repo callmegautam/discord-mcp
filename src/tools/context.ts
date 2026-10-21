@@ -10,6 +10,8 @@ import {
   type Guild,
   type GuildBan,
   type GuildMember,
+  type GuildTextBasedChannel,
+  type Message,
   type NonThreadGuildBasedChannel,
   type Role,
   type User,
@@ -98,4 +100,24 @@ export async function findBan(guild: Guild, userId: string): Promise<GuildBan | 
     if (isNotFound(error, [RESTJSONErrorCodes.UnknownBan])) return null;
     throw error;
   });
+}
+
+/** A channel that holds messages directly: text, announcement, and the chat of voice and stage channels. */
+export async function getMessageChannel(guild: Guild, channelId: string): Promise<GuildTextBasedChannel> {
+  const channel = await getChannel(guild, channelId);
+  if (!channel.isTextBased()) {
+    throw new UserError(`${channel.name} is a ${ChannelType[channel.type]} channel and has no messages.`);
+  }
+  return channel;
+}
+
+export async function getMessage(channel: GuildTextBasedChannel, messageId: string): Promise<Message<true>> {
+  const message = await channel.messages
+    .fetch({ message: messageId, force: true })
+    .catch((error: unknown) => {
+      if (isNotFound(error, [RESTJSONErrorCodes.UnknownMessage])) return null;
+      throw error;
+    });
+  if (!message) throw new UserError(`No message with ID ${messageId} in #${channel.name}.`);
+  return message;
 }

@@ -104,6 +104,19 @@ describe("registerTools", () => {
       "timeout_member",
       "remove_timeout",
       "get_audit_log",
+      "list_messages",
+      "get_message",
+      "send_message",
+      "edit_message",
+      "delete_message",
+      "bulk_delete_messages",
+      "list_pinned_messages",
+      "pin_message",
+      "unpin_message",
+      "add_reaction",
+      "remove_reaction",
+      "clear_reactions",
+      "list_reactions",
     ]);
   });
 
@@ -121,6 +134,10 @@ describe("registerTools", () => {
       "search_members",
       "list_bans",
       "get_audit_log",
+      "list_messages",
+      "get_message",
+      "list_pinned_messages",
+      "list_reactions",
     ]);
   });
 });

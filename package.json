@@ -1,6 +1,6 @@
 {
   "name": "discord-mcp",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Self-hosted MCP server for managing a Discord server through a bot",
   "type": "module",
   "private": true,

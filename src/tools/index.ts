@@ -13,19 +13,27 @@ import { registerRoleTools } from "./roles";
 import { registerThreadTools } from "./threads";
 import { registerWebhookTools } from "./webhooks";
 
+/** Tool groups in registration order, titled for the generated tool reference. */
+export const TOOL_GROUPS: ReadonlyArray<{
+  title: string;
+  register: (server: McpServer, ctx: ToolContext) => void;
+}> = [
+  { title: "Server", register: registerGuildTools },
+  { title: "Channels", register: registerChannelTools },
+  { title: "Roles", register: registerRoleTools },
+  { title: "Members", register: registerMemberTools },
+  { title: "Moderation", register: registerModerationTools },
+  { title: "Messages", register: registerMessageTools },
+  { title: "Threads and forum posts", register: registerThreadTools },
+  { title: "Invites", register: registerInviteTools },
+  { title: "Webhooks", register: registerWebhookTools },
+  { title: "Emojis and stickers", register: registerEmojiTools },
+  { title: "Scheduled events", register: registerEventTools },
+];
+
 /** Registers every tool, then applies READ_ONLY and DISABLED_TOOLS. Returns the active tool names. */
 export function registerTools(server: McpServer, ctx: ToolContext): string[] {
   const { server: tracked, tools } = trackTools(server);
-  registerGuildTools(tracked, ctx);
-  registerChannelTools(tracked, ctx);
-  registerRoleTools(tracked, ctx);
-  registerMemberTools(tracked, ctx);
-  registerModerationTools(tracked, ctx);
-  registerMessageTools(tracked, ctx);
-  registerThreadTools(tracked, ctx);
-  registerInviteTools(tracked, ctx);
-  registerWebhookTools(tracked, ctx);
-  registerEmojiTools(tracked, ctx);
-  registerEventTools(tracked, ctx);
+  for (const group of TOOL_GROUPS) group.register(tracked, ctx);
   return applyToolPolicy(tools, ctx.config);
 }

@@ -13,7 +13,7 @@ import { mergeRolePermissions, moveIndex, parseColor } from "../discord/roles";
 import { serializeMember, serializeRole } from "../discord/serialize";
 import { run, UserError } from "../lib/result";
 import { colorArg, guildIdArg, reasonArg, snowflake } from "../lib/schemas";
-import { getGuild, getRole, type ToolContext } from "./context";
+import { getGuild, getRole, loadAllMembers, type ToolContext } from "./context";
 
 const roleIdArg = snowflake.describe("The role ID.");
 const nameArg = z.string().trim().min(1).max(100).describe("Role name, 1 to 100 characters.");
@@ -59,7 +59,7 @@ export function registerRoleTools(server: McpServer, ctx: ToolContext): void {
         const role = await getRole(guild, role_id);
         if (role.id === guild.id)
           throw new UserError("Every member has @everyone, use list_members instead.");
-        await guild.members.fetch();
+        await loadAllMembers(guild);
         const page = [...role.members.values()]
           .filter((member) => after === undefined || BigInt(member.id) > BigInt(after))
           .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))

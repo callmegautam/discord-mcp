@@ -73,6 +73,8 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `edit_scheduled_event`      | Change an event, or start, end or cancel it                               |
 | `delete_scheduled_event`    | Delete an event                                                           |
 
+Every tool's inputs, types and limits are listed in the [tool reference](docs/tools.md).
+
 Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GUILD_ID`, or the only server the bot is in.
 
 Every write tool takes an optional `reason` that shows up in the server audit log. Discord keeps no audit log entry for editing a message or removing reactions, so for those tools the reason only goes to this server's log on stderr.
@@ -132,16 +134,28 @@ See [Safety](#safety) for `ALLOWED_GUILD_IDS`, `READ_ONLY` and `DISABLED_TOOLS`.
 
 `.env` is git ignored and docker ignored. The token is passed to the container at runtime and is never baked into the image.
 
-### 3. Build
+### 3. Get the image
+
+Pull the published image from GitHub Container Registry:
+
+```sh
+docker pull ghcr.io/callmegautam/discord-mcp:1
+```
+
+Images are tagged with the full version (`1.0.0`), the minor (`1.0`), the major (`1`) and `latest`, for `linux/amd64` and `linux/arm64`.
+
+Or build it yourself from a checkout:
 
 ```sh
 docker build -t discord-mcp .
 ```
 
+The commands below use the published image, replace it with `discord-mcp` if you built your own.
+
 ### 4. Connect it to Claude Code
 
 ```sh
-claude mcp add discord -s user -- docker run --rm -i --env-file /absolute/path/to/discord-mcp/.env discord-mcp
+claude mcp add discord -s user -- docker run --rm -i --env-file /absolute/path/to/discord-mcp/.env ghcr.io/callmegautam/discord-mcp:1
 ```
 
 Run `/mcp` in Claude Code to confirm it is connected.
@@ -153,7 +167,14 @@ For other MCP clients, use the same command:
   "mcpServers": {
     "discord": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "--env-file", "/absolute/path/to/discord-mcp/.env", "discord-mcp"]
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env-file",
+        "/absolute/path/to/discord-mcp/.env",
+        "ghcr.io/callmegautam/discord-mcp:1"
+      ]
     }
   }
 }
@@ -167,13 +188,31 @@ Requires Bun 1.4 or newer.
 bun install
 bun run dev        # run locally with watch mode, reads .env automatically
 bun run check      # typecheck, lint, format check and tests
+bun run docs:tools # regenerate docs/tools.md after changing a tool
 ```
+
+`docs/tools.md` is generated from the tool schemas, and `bun run check` fails when it is out of date.
 
 To try the tools by hand, use the MCP inspector:
 
 ```sh
 bunx @modelcontextprotocol/inspector bun run src/index.ts
 ```
+
+### Integration tests
+
+`bun run check` only runs unit tests. The integration tests start the real server over stdio and call every write tool through an MCP client against a real Discord server: they create and delete channels, roles, messages, threads, invites, webhooks, emojis, stickers and events, rename the server and set its system channel, then put everything back.
+
+Run them only against a throwaway server you made for this:
+
+1. Create an empty server and invite the bot with **Administrator**, then drag its role to the top.
+2. Run the tests with the server ID:
+
+```sh
+INTEGRATION_GUILD_ID=your-test-server-id bun run test:integration
+```
+
+They use the token from `.env`, lock the server to that one ID through `ALLOWED_GUILD_IDS`, and refuse to run when it has more than 10 members. Everything they create is named with an `mcpit` prefix, and anything left over from an interrupted run is deleted at the start of the next one.
 
 ### Layout
 
@@ -185,7 +224,9 @@ src/
   tools/            one file per tool group, registered in tools/index.ts, policy.ts
                     enforces annotations, READ_ONLY and DISABLED_TOOLS
   lib/              logger, shared schemas, tool result helpers
-tests/              bun test suites
+scripts/            tool reference generator
+docs/               generated tool reference
+tests/              bun test suites, integration/ for the live server tests
 ```
 
 stdout carries the MCP protocol. Log through `src/lib/logger.ts`, which writes to stderr, never with `console.log`.

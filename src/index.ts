@@ -28,7 +28,7 @@ async function main(): Promise<void> {
   const config = loadConfig(process.env);
   setLogLevel(config.logLevel);
 
-  const client = await createDiscordClient(config.token);
+  const client = await createDiscordClient(config.token, config);
   logger.info(`logged in as ${client.user.tag}, in ${client.guilds.cache.size} server(s)`);
   checkAllowedGuilds(client, config);
 

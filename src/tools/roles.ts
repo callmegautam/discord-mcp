@@ -12,15 +12,11 @@ import {
 import { mergeRolePermissions, moveIndex, parseColor } from "../discord/roles";
 import { serializeMember, serializeRole } from "../discord/serialize";
 import { run, UserError } from "../lib/result";
-import { guildIdArg, reasonArg, snowflake } from "../lib/schemas";
+import { colorArg, guildIdArg, reasonArg, snowflake } from "../lib/schemas";
 import { getGuild, getRole, type ToolContext } from "./context";
 
 const roleIdArg = snowflake.describe("The role ID.");
 const nameArg = z.string().trim().min(1).max(100).describe("Role name, 1 to 100 characters.");
-const colorArg = z
-  .string()
-  .regex(/^#?[0-9a-fA-F]{6}$/, "must be a hex color like #5865f2")
-  .describe("Hex color like #5865f2.");
 const hoistArg = z.boolean().describe("Whether members with this role are listed separately in the sidebar.");
 const mentionableArg = z.boolean().describe("Whether anyone can @mention this role.");
 const permissionList = (what: string) =>

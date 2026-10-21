@@ -8,6 +8,8 @@ export interface Config {
   /** Empty means every server the bot is in is allowed. */
   allowedGuildIds: string[];
   readOnly: boolean;
+  /** Requests the privileged Message Content intent, needed to read what other users wrote. */
+  messageContent: boolean;
   disabledTools: string[];
   logLevel: LogLevel;
 }
@@ -39,6 +41,10 @@ const envSchema = z
       emptyToUndefined,
       z.stringbool({ error: "must be true or false" }).default(false),
     ),
+    MESSAGE_CONTENT: z.preprocess(
+      emptyToUndefined,
+      z.stringbool({ error: "must be true or false" }).default(false),
+    ),
     DISABLED_TOOLS: commaList(z.string().regex(/^[a-z_]+$/, "must be snake_case tool names")),
     LOG_LEVEL: z.preprocess(emptyToUndefined, z.enum(LOG_LEVELS).default("info")),
   })
@@ -62,6 +68,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     defaultGuildId: parsed.data.DISCORD_GUILD_ID,
     allowedGuildIds: parsed.data.ALLOWED_GUILD_IDS,
     readOnly: parsed.data.READ_ONLY,
+    messageContent: parsed.data.MESSAGE_CONTENT,
     disabledTools: parsed.data.DISABLED_TOOLS,
     logLevel: parsed.data.LOG_LEVEL,
   };

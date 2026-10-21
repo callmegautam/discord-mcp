@@ -37,10 +37,25 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `timeout_member`            | Time out a member for up to 28 days                                       |
 | `remove_timeout`            | End a timeout early                                                       |
 | `get_audit_log`             | Audit log entries, filtered by action and by who did it                   |
+| `list_messages`             | Messages in a channel, newest first, in pages of up to 100                |
+| `get_message`               | One message with embeds, attachments and reactions                        |
+| `send_message`              | Send text and embeds, optionally as a reply                               |
+| `edit_message`              | Change the text or embeds of a message the bot sent                       |
+| `delete_message`            | Delete a message                                                          |
+| `bulk_delete_messages`      | Delete up to 100 messages under 14 days old, by ID or the most recent     |
+| `list_pinned_messages`      | Pinned messages in a channel                                              |
+| `pin_message`               | Pin a message                                                             |
+| `unpin_message`             | Unpin a message                                                           |
+| `add_reaction`              | React to a message as the bot                                             |
+| `remove_reaction`           | Remove the bot's or another user's reaction                               |
+| `clear_reactions`           | Remove all reactions, or all of one emoji                                 |
+| `list_reactions`            | Users who reacted with an emoji                                           |
 
 Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GUILD_ID`, or the only server the bot is in.
 
-Every write tool takes an optional `reason` that shows up in the server audit log. Message tools are coming, see [CHANGELOG.md](CHANGELOG.md).
+Every write tool takes an optional `reason` that shows up in the server audit log. Discord keeps no audit log entry for editing a message or removing reactions, so for those tools the reason only goes to this server's log on stderr.
+
+`send_message` doesn't let `@everyone`, `@here` or role mentions ping anyone unless `allow_mass_mentions` is true.
 
 ## Safety
 
@@ -64,8 +79,8 @@ Write tools check permissions and role order before calling Discord. When the bo
 
 1. Create an application at https://discord.com/developers/applications and add a bot under the **Bot** tab.
 2. Copy the bot token.
-3. Under **Privileged Gateway Intents**, enable **Server Members Intent**.
-4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, the permission overwrite and role tools need **Manage Roles**, and the moderation tools need **Kick Members**, **Ban Members**, **Moderate Members** (timeouts), **Manage Nicknames** and **View Audit Log**. Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
+3. Under **Privileged Gateway Intents**, enable **Server Members Intent**. To let the message tools read what other users wrote, also enable **Message Content Intent** and set `MESSAGE_CONTENT=true`. Without it every other tool works, and messages from other users come back with empty content.
+4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, the permission overwrite and role tools need **Manage Roles**, the moderation tools need **Kick Members**, **Ban Members**, **Moderate Members** (timeouts), **Manage Nicknames** and **View Audit Log**, and the message tools need **View Channel**, **Read Message History**, **Send Messages**, **Embed Links**, **Add Reactions**, **Pin Messages** and **Manage Messages** (deleting other users' messages, bulk deletes, removing other users' reactions). Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
 5. In your server settings, drag the bot's role above any role you want it to manage. Role tools refuse roles at or above the bot's highest role, and roles managed by an integration. Moderation tools refuse members whose highest role is at or above the bot's, and the server owner.
 
 ### 2. Configure
@@ -82,11 +97,12 @@ DISCORD_TOKEN=your-bot-token
 DISCORD_GUILD_ID=optional-default-server-id
 ALLOWED_GUILD_IDS=
 READ_ONLY=false
+MESSAGE_CONTENT=false
 DISABLED_TOOLS=
 LOG_LEVEL=info
 ```
 
-See [Safety](#safety) for the three middle settings.
+See [Safety](#safety) for `ALLOWED_GUILD_IDS`, `READ_ONLY` and `DISABLED_TOOLS`. `MESSAGE_CONTENT=true` requests the Message Content intent at login, which fails if it is not enabled in the developer portal.
 
 `.env` is git ignored and docker ignored. The token is passed to the container at runtime and is never baked into the image.
 

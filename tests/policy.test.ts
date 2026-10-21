@@ -86,8 +86,15 @@ describe("registerTools", () => {
       "set_channel_permission",
       "remove_channel_permission",
       "list_roles",
+      "list_role_members",
+      "create_role",
+      "edit_role",
+      "delete_role",
+      "move_role",
       "list_members",
       "get_member",
+      "add_member_role",
+      "remove_member_role",
     ]);
   });
 
@@ -99,6 +106,7 @@ describe("registerTools", () => {
       "list_channels",
       "list_channel_permissions",
       "list_roles",
+      "list_role_members",
       "list_members",
       "get_member",
     ]);

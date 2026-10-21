@@ -19,12 +19,19 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `set_channel_permission`    | Allow, deny or reset permissions for a role or member on a channel        |
 | `remove_channel_permission` | Remove a role's or member's overwrite from a channel                      |
 | `list_roles`                | All roles with permissions, highest first                                 |
+| `list_role_members`         | Members who have a role, in pages of up to 1000                           |
+| `create_role`               | Create a role with a color, permissions and sidebar display               |
+| `edit_role`                 | Change name, color, sidebar display, mentionability or permissions        |
+| `delete_role`               | Delete a role                                                             |
+| `move_role`                 | Place a role directly above or below another role                         |
 | `list_members`              | Members in pages of up to 1000                                            |
 | `get_member`                | One member with roles and timeout status                                  |
+| `add_member_role`           | Give a member a role                                                      |
+| `remove_member_role`        | Take a role away from a member                                            |
 
 Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GUILD_ID`, or the only server the bot is in.
 
-Every write tool takes an optional `reason` that shows up in the server audit log. Role, moderation and message tools are coming, see [CHANGELOG.md](CHANGELOG.md).
+Every write tool takes an optional `reason` that shows up in the server audit log. Moderation and message tools are coming, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Safety
 
@@ -49,8 +56,8 @@ Write tools check permissions and role order before calling Discord. When the bo
 1. Create an application at https://discord.com/developers/applications and add a bot under the **Bot** tab.
 2. Copy the bot token.
 3. Under **Privileged Gateway Intents**, enable **Server Members Intent**.
-4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, and the permission overwrite tools need **Manage Roles**. Discord only lets the bot allow or deny permissions it has itself, unless it is an Administrator.
-5. In your server settings, drag the bot's role above any role you want it to manage.
+4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, and the permission overwrite and role tools need **Manage Roles**. Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
+5. In your server settings, drag the bot's role above any role you want it to manage. Role tools refuse roles at or above the bot's highest role, and roles managed by an integration.
 
 ### 2. Configure
 

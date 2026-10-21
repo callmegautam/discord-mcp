@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-21
+
+### Added
+
+- Role tools: `create_role`, `edit_role`, `delete_role`, `move_role`
+- Role membership tools: `list_role_members`, `add_member_role`, `remove_member_role`
+- `edit_role` takes `add_permissions` and `remove_permissions` and keeps every other permission as it is
+- `move_role` places a role directly above or below another role instead of taking a raw position
+- Prechecks name the missing Manage Roles permission, permissions the bot can't give because it lacks them, and roles at or above the bot's highest role
+
 ## [0.3.0] - 2026-10-21
 
 ### Added
@@ -39,7 +49,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/callmegautam/discord-mcp/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/callmegautam/discord-mcp/releases/tag/v0.1.0

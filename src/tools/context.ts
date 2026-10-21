@@ -56,10 +56,23 @@ export async function getCategory(guild: Guild, channelId: string): Promise<Cate
 export async function getOverwriteTarget(guild: Guild, id: string): Promise<Role | GuildMember> {
   const role = await guild.roles.fetch(id);
   if (role) return role;
-  const member = await guild.members.fetch(id).catch((error: unknown) => {
+  return getMember(guild, id).catch((error: unknown) => {
+    if (error instanceof UserError) throw new UserError(`No role or member with ID ${id} in ${guild.name}.`);
+    throw error;
+  });
+}
+
+export async function getRole(guild: Guild, roleId: string): Promise<Role> {
+  const role = await guild.roles.fetch(roleId);
+  if (!role) throw new UserError(`No role with ID ${roleId} in ${guild.name}.`);
+  return role;
+}
+
+export async function getMember(guild: Guild, userId: string): Promise<GuildMember> {
+  const member = await guild.members.fetch(userId).catch((error: unknown) => {
     if (isNotFound(error, [RESTJSONErrorCodes.UnknownMember, RESTJSONErrorCodes.UnknownUser])) return null;
     throw error;
   });
-  if (!member) throw new UserError(`No role or member with ID ${id} in ${guild.name}.`);
+  if (!member) throw new UserError(`No member with ID ${userId} in ${guild.name}.`);
   return member;
 }

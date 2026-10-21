@@ -1,9 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { requireManageableRole } from "../discord/guards";
 import { serializeMember } from "../discord/serialize";
-import { run } from "../lib/result";
-import { guildIdArg, snowflake } from "../lib/schemas";
-import { getGuild, type ToolContext } from "./context";
+import { run, UserError } from "../lib/result";
+import { guildIdArg, reasonArg, snowflake } from "../lib/schemas";
+import { getGuild, getMember, getRole, type ToolContext } from "./context";
+
+const userIdArg = snowflake.describe("The member's user ID.");
+const roleIdArg = snowflake.describe("The role ID.");
 
 export function registerMemberTools(server: McpServer, ctx: ToolContext): void {
   server.registerTool(
@@ -32,10 +36,52 @@ export function registerMemberTools(server: McpServer, ctx: ToolContext): void {
     {
       title: "Get member",
       description: "Get one member of a server by user ID, including their roles and timeout status.",
-      inputSchema: { guild_id: guildIdArg, user_id: snowflake.describe("The member's user ID.") },
+      inputSchema: { guild_id: guildIdArg, user_id: userIdArg },
       annotations: { readOnlyHint: true },
     },
     ({ guild_id, user_id }) =>
       run(async () => serializeMember(await getGuild(ctx, guild_id).members.fetch(user_id))),
+  );
+
+  server.registerTool(
+    "add_member_role",
+    {
+      title: "Add member role",
+      description: "Give a member a role. The role has to be below the bot's highest role.",
+      inputSchema: { guild_id: guildIdArg, user_id: userIdArg, role_id: roleIdArg, reason: reasonArg },
+      annotations: { readOnlyHint: false, destructiveHint: false },
+    },
+    ({ guild_id, user_id, role_id, reason }) =>
+      run(async () => {
+        const guild = getGuild(ctx, guild_id);
+        const role = await getRole(guild, role_id);
+        requireManageableRole(guild, role);
+        const member = await getMember(guild, user_id);
+        if (member.roles.cache.has(role.id)) {
+          throw new UserError(`${member.displayName} already has the ${role.name} role.`);
+        }
+        return serializeMember(await member.roles.add(role, reason));
+      }),
+  );
+
+  server.registerTool(
+    "remove_member_role",
+    {
+      title: "Remove member role",
+      description: "Take a role away from a member. The role has to be below the bot's highest role.",
+      inputSchema: { guild_id: guildIdArg, user_id: userIdArg, role_id: roleIdArg, reason: reasonArg },
+      annotations: { readOnlyHint: false, destructiveHint: true },
+    },
+    ({ guild_id, user_id, role_id, reason }) =>
+      run(async () => {
+        const guild = getGuild(ctx, guild_id);
+        const role = await getRole(guild, role_id);
+        requireManageableRole(guild, role);
+        const member = await getMember(guild, user_id);
+        if (!member.roles.cache.has(role.id)) {
+          throw new UserError(`${member.displayName} doesn't have the ${role.name} role.`);
+        }
+        return serializeMember(await member.roles.remove(role, reason));
+      }),
   );
 }

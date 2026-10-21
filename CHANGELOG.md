@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-21
+
+### Added
+
+- Docker images on GitHub Container Registry, `ghcr.io/callmegautam/discord-mcp`, built for `linux/amd64` and `linux/arm64` on every release and tagged with the version, minor, major and `latest`
+- A full tool reference in `docs/tools.md` with every tool's inputs, types and limits, generated from the tool schemas with `bun run docs:tools`. `bun run check` fails when it is out of date
+- Integration tests, `bun run test:integration`, that start the server over stdio and drive every write tool against a throwaway Discord server. They lock the server to that one ID, refuse servers with more than 10 members and clean up after themselves
+
+### Fixed
+
+- `list_role_members` no longer fails with a gateway rate limit when called twice within about 30 seconds. The full member list is now fetched once per server and kept current by the Server Members intent (#13)
+- `get_message` no longer reports reactions that were already removed, and `remove_reaction` and `clear_reactions` no longer act on them (#14)
+
 ## [0.7.0] - 2026-10-21
 
 ### Added
@@ -90,7 +103,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...v0.5.0

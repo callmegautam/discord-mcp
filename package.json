@@ -1,6 +1,6 @@
 {
   "name": "discord-mcp",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "Self-hosted MCP server for managing a Discord server through a bot",
   "type": "module",
   "private": true,
@@ -15,7 +15,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "bun test",
+    "test:integration": "INTEGRATION=1 bun test tests/integration --timeout 60000",
     "check": "bun run typecheck && bun run lint && bun run format:check && bun test",
+    "docs:tools": "bun run scripts/tool-reference.ts",
     "docker:build": "docker build -t discord-mcp ."
   },
   "engines": {

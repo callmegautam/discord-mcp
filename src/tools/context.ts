@@ -98,6 +98,22 @@ export async function findMember(guild: Guild, userId: string): Promise<GuildMem
   });
 }
 
+const membersLoaded = new WeakMap<Guild, Promise<unknown>>();
+
+/**
+ * Loads every member of the server once. Discord rate limits the full member request, and the
+ * Server Members intent keeps the cache current afterwards.
+ */
+export async function loadAllMembers(guild: Guild): Promise<void> {
+  let pending = membersLoaded.get(guild);
+  if (!pending) {
+    pending = guild.members.fetch();
+    membersLoaded.set(guild, pending);
+    pending.catch(() => membersLoaded.delete(guild));
+  }
+  await pending;
+}
+
 export async function getMember(guild: Guild, userId: string): Promise<GuildMember> {
   const member = await findMember(guild, userId);
   if (!member) throw new UserError(`No member with ID ${userId} in ${guild.name}.`);
@@ -131,6 +147,9 @@ export async function getMessageChannel(guild: Guild, channelId: string): Promis
 }
 
 export async function getMessage(channel: GuildTextBasedChannel, messageId: string): Promise<Message<true>> {
+  // Discord leaves out reactions when a message has none, and discord.js then keeps the reactions
+  // of the cached copy, so a removed last reaction would still show up.
+  channel.messages.cache.delete(messageId);
   const message = await channel.messages
     .fetch({ message: messageId, force: true })
     .catch((error: unknown) => {

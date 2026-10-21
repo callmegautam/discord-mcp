@@ -122,3 +122,18 @@ export function requireManageableRole(guild: Guild, role: Role): void {
   requirePermissions(me.permissions, [PermissionFlagsBits.ManageRoles]);
   requireRoleBelowBot(guild.id, me.roles.highest, role);
 }
+
+/**
+ * For emojis, stickers and events: the Manage permission covers everything, the Create permission
+ * also covers what the bot made itself.
+ */
+export function requireManageOrOwn(
+  have: Readonly<PermissionsBitField>,
+  manage: bigint,
+  create: bigint,
+  ownedByBot: boolean,
+  where?: string,
+): void {
+  if (have.has(manage) || (ownedByBot && have.has(create))) return;
+  requirePermissions(have, [manage], where);
+}

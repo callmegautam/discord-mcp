@@ -25,3 +25,6 @@ export const guildIdArg = snowflake
   .describe(
     "Server ID. Defaults to DISCORD_GUILD_ID, or to the only server the bot is in when it is in exactly one.",
   );
+
+// Files are downloaded here and uploaded to Discord, plain http is refused.
+export const httpsUrlArg = z.url({ protocol: /^https$/, error: "must be an https URL" });

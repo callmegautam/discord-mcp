@@ -22,7 +22,7 @@ import { run, UserError } from "../lib/result";
 import { colorArg, guildIdArg, reasonArg, snowflake, unloggedReasonArg } from "../lib/schemas";
 import { getGuild, getMessage, getMessageChannel, type ToolContext } from "./context";
 
-const channelIdArg = snowflake.describe("The channel ID.");
+const channelIdArg = snowflake.describe("The channel or thread ID.");
 const messageIdArg = snowflake.describe("The message ID.");
 const emojiArg = z
   .string()
@@ -30,7 +30,7 @@ const emojiArg = z
   .min(1)
   .max(100)
   .describe("A Unicode emoji character, or a custom emoji as <:name:id>.");
-const contentArg = z
+export const contentArg = z
   .string()
   .max(MAX_CONTENT_LENGTH)
   .describe(`Message text, up to ${MAX_CONTENT_LENGTH} characters. Supports Discord markdown.`);
@@ -55,7 +55,7 @@ const embedArg = z.object({
     .max(MAX_EMBED_FIELDS)
     .optional(),
 });
-const embedsArg = z
+export const embedsArg = z
   .array(embedArg)
   .max(MAX_EMBEDS)
   .describe(`Up to ${MAX_EMBEDS} embeds, with at most 6000 characters of text combined.`);
@@ -65,7 +65,13 @@ const CONTENT_HIDDEN_NOTE =
 
 function requireIn(channel: GuildTextBasedChannel, permissions: bigint[]): void {
   const have = botMember(channel.guild).permissionsIn(channel);
-  requirePermissions(have, [PermissionFlagsBits.ViewChannel, ...permissions], `#${channel.name}`);
+  // Inside threads Send Messages in Threads takes the place of Send Messages.
+  const needed = channel.isThread()
+    ? permissions.map((flag) =>
+        flag === PermissionFlagsBits.SendMessages ? PermissionFlagsBits.SendMessagesInThreads : flag,
+      )
+    : permissions;
+  requirePermissions(have, [PermissionFlagsBits.ViewChannel, ...needed], `#${channel.name}`);
 }
 
 function readNote(ctx: ToolContext): { note?: string } {

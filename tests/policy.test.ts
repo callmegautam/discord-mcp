@@ -77,6 +77,7 @@ describe("registerTools", () => {
     expect(registerTools(new McpServer({ name: "test", version: "0.0.0" }), ctx)).toEqual([
       "list_guilds",
       "get_guild",
+      "edit_guild",
       "list_channels",
       "create_channel",
       "edit_channel",
@@ -117,6 +118,27 @@ describe("registerTools", () => {
       "remove_reaction",
       "clear_reactions",
       "list_reactions",
+      "list_threads",
+      "create_thread",
+      "create_forum_post",
+      "edit_thread",
+      "delete_thread",
+      "list_invites",
+      "create_invite",
+      "delete_invite",
+      "list_webhooks",
+      "create_webhook",
+      "delete_webhook",
+      "list_emojis",
+      "create_emoji",
+      "delete_emoji",
+      "list_stickers",
+      "create_sticker",
+      "delete_sticker",
+      "list_scheduled_events",
+      "create_scheduled_event",
+      "edit_scheduled_event",
+      "delete_scheduled_event",
     ]);
   });
 
@@ -138,6 +160,12 @@ describe("registerTools", () => {
       "get_message",
       "list_pinned_messages",
       "list_reactions",
+      "list_threads",
+      "list_invites",
+      "list_webhooks",
+      "list_emojis",
+      "list_stickers",
+      "list_scheduled_events",
     ]);
   });
 });

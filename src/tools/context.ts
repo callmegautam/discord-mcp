@@ -7,14 +7,21 @@ import {
   type CategoryChannel,
   type Client,
   type Collection,
+  type AnyThreadChannel,
   type Guild,
   type GuildBan,
+  type GuildBasedChannel,
+  type GuildEmoji,
+  type GuildScheduledEvent,
   type GuildMember,
   type GuildTextBasedChannel,
+  type Invite,
   type Message,
   type NonThreadGuildBasedChannel,
   type Role,
+  type Sticker,
   type User,
+  type Webhook,
 } from "discord.js";
 import type { Config } from "../config";
 import { isGuildAllowed, resolveGuild } from "../discord/resolve";
@@ -38,15 +45,27 @@ function isNotFound(error: unknown, codes: RESTJSONErrorCodes[]): boolean {
   return error instanceof DiscordjsError && error.code === DiscordjsErrorCodes.GuildChannelUnowned;
 }
 
-export async function getChannel(guild: Guild, channelId: string): Promise<NonThreadGuildBasedChannel> {
+/** Any channel in the server, threads included. */
+async function fetchChannel(guild: Guild, channelId: string): Promise<GuildBasedChannel> {
   const channel = await guild.channels.fetch(channelId).catch((error: unknown) => {
     if (isNotFound(error, [RESTJSONErrorCodes.UnknownChannel])) return null;
     throw error;
   });
   if (!channel) throw new UserError(`No channel with ID ${channelId} in ${guild.name}.`);
+  return channel;
+}
+
+export async function getChannel(guild: Guild, channelId: string): Promise<NonThreadGuildBasedChannel> {
+  const channel = await fetchChannel(guild, channelId);
   if (channel.isThread()) {
-    throw new UserError(`${channel.name} is a thread, thread tools are not supported yet.`);
+    throw new UserError(`${channel.name} is a thread, use edit_thread or delete_thread for it.`);
   }
+  return channel;
+}
+
+export async function getThread(guild: Guild, threadId: string): Promise<AnyThreadChannel> {
+  const channel = await fetchChannel(guild, threadId);
+  if (!channel.isThread()) throw new UserError(`${channel.name} is a channel, not a thread or forum post.`);
   return channel;
 }
 
@@ -102,9 +121,9 @@ export async function findBan(guild: Guild, userId: string): Promise<GuildBan | 
   });
 }
 
-/** A channel that holds messages directly: text, announcement, and the chat of voice and stage channels. */
+/** A channel that holds messages directly: text, announcement, threads, and voice and stage chat. */
 export async function getMessageChannel(guild: Guild, channelId: string): Promise<GuildTextBasedChannel> {
-  const channel = await getChannel(guild, channelId);
+  const channel = await fetchChannel(guild, channelId);
   if (!channel.isTextBased()) {
     throw new UserError(`${channel.name} is a ${ChannelType[channel.type]} channel and has no messages.`);
   }
@@ -120,4 +139,55 @@ export async function getMessage(channel: GuildTextBasedChannel, messageId: stri
     });
   if (!message) throw new UserError(`No message with ID ${messageId} in #${channel.name}.`);
   return message;
+}
+
+/** Looks up an invite by code and makes sure it belongs to this server. */
+export async function getInvite(client: Client, guild: Guild, code: string): Promise<Invite> {
+  const invite = await client.fetchInvite(code).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownInvite])) return null;
+    throw error;
+  });
+  if (!invite || invite.guild?.id !== guild.id) throw new UserError(`No invite ${code} in ${guild.name}.`);
+  return invite;
+}
+
+/** Needs Manage Webhooks in the webhook's channel. */
+export async function getWebhook(client: Client, guild: Guild, webhookId: string): Promise<Webhook> {
+  const webhook = await client.fetchWebhook(webhookId).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownWebhook])) return null;
+    throw error;
+  });
+  if (!webhook || webhook.guildId !== guild.id) {
+    throw new UserError(`No webhook with ID ${webhookId} in ${guild.name}.`);
+  }
+  return webhook;
+}
+
+export async function getEmoji(guild: Guild, emojiId: string): Promise<GuildEmoji> {
+  const emoji = await guild.emojis.fetch(emojiId, { force: true }).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownEmoji])) return null;
+    throw error;
+  });
+  if (!emoji) throw new UserError(`No custom emoji with ID ${emojiId} in ${guild.name}.`);
+  return emoji;
+}
+
+export async function getSticker(guild: Guild, stickerId: string): Promise<Sticker> {
+  const sticker = await guild.stickers.fetch(stickerId, { force: true }).catch((error: unknown) => {
+    if (isNotFound(error, [RESTJSONErrorCodes.UnknownSticker])) return null;
+    throw error;
+  });
+  if (!sticker) throw new UserError(`No sticker with ID ${stickerId} in ${guild.name}.`);
+  return sticker;
+}
+
+export async function getScheduledEvent(guild: Guild, eventId: string): Promise<GuildScheduledEvent> {
+  const event = await guild.scheduledEvents
+    .fetch({ guildScheduledEvent: eventId, force: true, withUserCount: true })
+    .catch((error: unknown) => {
+      if (isNotFound(error, [RESTJSONErrorCodes.UnknownGuildScheduledEvent])) return null;
+      throw error;
+    });
+  if (!event) throw new UserError(`No scheduled event with ID ${eventId} in ${guild.name}.`);
+  return event;
 }

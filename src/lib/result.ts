@@ -10,12 +10,20 @@ export class UserError extends Error {
 const ERROR_HINTS: Record<number, string> = {
   10014: "Discord doesn't know this emoji. Custom emojis have to come from a server the bot is in.",
   30003: "The channel has hit Discord's limit of pinned messages, unpin one first.",
+  30007: "The channel has hit Discord's limit of 15 webhooks, delete one first.",
+  30008: "The server has no free emoji slots left, boosting the server adds more.",
+  30039: "The server has no free sticker slots left, boosting the server adds more.",
+  40067: "This forum requires at least one tag on every post.",
   50001: "The bot can't see this channel or resource, check its role and the channel permission overwrites.",
   50013:
     "The bot lacks a permission for this, or the target is at or above the bot's highest role in Server Settings > Roles.",
   50006: "A message needs content, an embed or an attachment, it can't end up empty.",
+  50045: "The file is too large. Emojis can be 256 KB, stickers 512 KB.",
+  50046:
+    "Discord couldn't read the file. Emojis need PNG, JPEG, GIF or WebP, stickers PNG, APNG, GIF or Lottie JSON.",
   50074:
     "Community servers need their rules and updates channels, pick other ones in Server Settings > Community first.",
+  160004: "That message already has a thread.",
 };
 
 export function ok(data: unknown): CallToolResult {

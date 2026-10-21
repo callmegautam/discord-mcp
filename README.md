@@ -10,6 +10,7 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | --------------------------- | ------------------------------------------------------------------------- |
 | `list_guilds`               | Servers the bot is in                                                     |
 | `get_guild`                 | Server details: owner, member count, verification, boosts                 |
+| `edit_guild`                | Change name, icon, verification level or system channel                   |
 | `list_channels`             | All channels and categories                                               |
 | `create_channel`            | Create a text, voice, announcement, stage or forum channel, or a category |
 | `edit_channel`              | Change name, topic, slowmode, age restriction, category or position       |
@@ -50,12 +51,37 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `remove_reaction`           | Remove the bot's or another user's reaction                               |
 | `clear_reactions`           | Remove all reactions, or all of one emoji                                 |
 | `list_reactions`            | Users who reacted with an emoji                                           |
+| `list_threads`              | Active threads and forum posts, or a channel's archived ones              |
+| `create_thread`             | Start a thread in a text or announcement channel, from a message or not   |
+| `create_forum_post`         | Start a forum post with a first message and tags                          |
+| `edit_thread`               | Rename, archive, reopen, lock, retag or set slowmode on a thread          |
+| `delete_thread`             | Delete a thread or forum post                                             |
+| `list_invites`              | Active invites with uses and expiry                                       |
+| `create_invite`             | Create an invite link to a channel                                        |
+| `delete_invite`             | Revoke an invite                                                          |
+| `list_webhooks`             | Webhooks in the server or a channel, without their secret URLs            |
+| `create_webhook`            | Create a webhook and return its URL                                       |
+| `delete_webhook`            | Delete a webhook                                                          |
+| `list_emojis`               | Custom emojis                                                             |
+| `create_emoji`              | Upload a custom emoji from an image URL                                   |
+| `delete_emoji`              | Delete a custom emoji                                                     |
+| `list_stickers`             | Custom stickers                                                           |
+| `create_sticker`            | Upload a custom sticker from a file URL                                   |
+| `delete_sticker`            | Delete a custom sticker                                                   |
+| `list_scheduled_events`     | Upcoming and running events with interest counts                          |
+| `create_scheduled_event`    | Schedule a voice, stage or external event                                 |
+| `edit_scheduled_event`      | Change an event, or start, end or cancel it                               |
+| `delete_scheduled_event`    | Delete an event                                                           |
 
 Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GUILD_ID`, or the only server the bot is in.
 
 Every write tool takes an optional `reason` that shows up in the server audit log. Discord keeps no audit log entry for editing a message or removing reactions, so for those tools the reason only goes to this server's log on stderr.
 
 `send_message` doesn't let `@everyone`, `@here` or role mentions ping anyone unless `allow_mass_mentions` is true.
+
+The message tools also work inside threads and forum posts, pass the thread ID as `channel_id`.
+
+Webhook URLs contain a secret token, so `list_webhooks` leaves them out and only `create_webhook` returns the URL of the webhook it made. `create_emoji`, `create_sticker`, `create_webhook` and `edit_guild` take https URLs only, the file is downloaded and checked against Discord's size limit before it is uploaded.
 
 ## Safety
 
@@ -80,7 +106,7 @@ Write tools check permissions and role order before calling Discord. When the bo
 1. Create an application at https://discord.com/developers/applications and add a bot under the **Bot** tab.
 2. Copy the bot token.
 3. Under **Privileged Gateway Intents**, enable **Server Members Intent**. To let the message tools read what other users wrote, also enable **Message Content Intent** and set `MESSAGE_CONTENT=true`. Without it every other tool works, and messages from other users come back with empty content.
-4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, the permission overwrite and role tools need **Manage Roles**, the moderation tools need **Kick Members**, **Ban Members**, **Moderate Members** (timeouts), **Manage Nicknames** and **View Audit Log**, and the message tools need **View Channel**, **Read Message History**, **Send Messages**, **Embed Links**, **Add Reactions**, **Pin Messages** and **Manage Messages** (deleting other users' messages, bulk deletes, removing other users' reactions). Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
+4. Invite the bot from **OAuth2 > URL Generator** with the `bot` scope and the permissions you want it to have. The channel tools need **Manage Channels**, the permission overwrite and role tools need **Manage Roles**, the moderation tools need **Kick Members**, **Ban Members**, **Moderate Members** (timeouts), **Manage Nicknames** and **View Audit Log**, the message tools need **View Channel**, **Read Message History**, **Send Messages**, **Embed Links**, **Add Reactions**, **Pin Messages** and **Manage Messages** (deleting other users' messages, bulk deletes, removing other users' reactions), the thread tools need **Create Public Threads**, **Create Private Threads**, **Send Messages in Threads** and **Manage Threads**, `edit_guild` and `list_invites` need **Manage Server**, `create_invite` needs **Create Invite**, the webhook tools need **Manage Webhooks**, the emoji and sticker tools need **Create Expressions** and **Manage Expressions** (deleting ones the bot didn't upload), and the event tools need **Create Events** and **Manage Events** (changing events the bot didn't create). Discord only lets the bot give out permissions it has itself, unless it is an Administrator.
 5. In your server settings, drag the bot's role above any role you want it to manage. Role tools refuse roles at or above the bot's highest role, and roles managed by an integration. Moderation tools refuse members whose highest role is at or above the bot's, and the server owner.
 
 ### 2. Configure

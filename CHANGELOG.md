@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-21
+
+### Added
+
+- Thread tools: `list_threads`, `create_thread`, `create_forum_post`, `edit_thread`, `delete_thread`
+- The message tools work inside threads and forum posts, with Send Messages in Threads checked there instead of Send Messages
+- Invite tools: `list_invites`, `create_invite`, `delete_invite`, which takes a code or a discord.gg link
+- Webhook tools: `list_webhooks`, `create_webhook`, `delete_webhook`. Only `create_webhook` returns a webhook URL, since it holds a secret token
+- Emoji and sticker tools: `list_emojis`, `create_emoji`, `delete_emoji`, `list_stickers`, `create_sticker`, `delete_sticker`
+- Scheduled event tools: `list_scheduled_events`, `create_scheduled_event`, `edit_scheduled_event`, `delete_scheduled_event` for voice, stage and external events, with start, end and cancel through `edit_scheduled_event`
+- `edit_guild` changes the server's name, icon, verification level and system channel
+- `list_channels` returns each forum's tags, `get_guild` returns the system channel
+- Images and sticker files are taken from https URLs only, downloaded and checked against Discord's size limits before uploading
+- Prechecks name the missing Manage Server, Create Invite, Manage Webhooks, Create or Manage Expressions, Create or Manage Events, Create Public or Private Threads and Manage Threads permission, and check forum tags, event times and event status changes
+- Hints on Discord errors 30007 (webhook limit), 30008 (emoji slots), 30039 (sticker slots), 40067 (forum tag required), 50045 (file too large), 50046 (unreadable file) and 160004 (message already has a thread)
+
 ## [0.6.0] - 2026-10-21
 
 ### Added
@@ -74,7 +90,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/callmegautam/discord-mcp/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...v0.4.0

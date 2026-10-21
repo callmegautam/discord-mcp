@@ -2,18 +2,27 @@ import {
   AuditLogEvent,
   ChannelType,
   GuildVerificationLevel,
+  StickerFormatType,
+  WebhookType,
+  type AnyThreadChannel,
   type Guild,
   type GuildBasedChannel,
   OverwriteType,
   type GuildAuditLogsEntry,
   type GuildBan,
+  type GuildEmoji,
   type GuildMember,
+  type GuildScheduledEvent,
+  type Invite,
   type Message,
   MessageType,
   type PermissionOverwrites,
   type Role,
+  type Sticker,
   type User,
+  type Webhook,
 } from "discord.js";
+import { eventStatusLabel, eventTypeLabel } from "./events";
 import { plainAuditExtra } from "./moderation";
 
 export function serializeGuildSummary(guild: Guild) {
@@ -33,6 +42,7 @@ export function serializeGuild(guild: Guild) {
     boostCount: guild.premiumSubscriptionCount,
     preferredLocale: guild.preferredLocale,
     iconUrl: guild.iconURL(),
+    systemChannelId: guild.systemChannelId,
     features: guild.features,
   };
 }
@@ -47,6 +57,9 @@ export function serializeChannel(channel: GuildBasedChannel) {
     topic: "topic" in channel ? channel.topic : null,
     nsfw: "nsfw" in channel ? channel.nsfw : false,
     slowmodeSeconds: "rateLimitPerUser" in channel ? channel.rateLimitPerUser : null,
+    forumTags: channel.isThreadOnly()
+      ? channel.availableTags.map(({ id, name, moderated }) => ({ id, name, moderated }))
+      : null,
   };
 }
 
@@ -146,5 +159,96 @@ export function serializeMessage(message: Message) {
       count: reaction.count,
       byBot: reaction.me,
     })),
+  };
+}
+
+export function serializeThread(thread: AnyThreadChannel) {
+  return {
+    id: thread.id,
+    name: thread.name,
+    type: ChannelType[thread.type],
+    parentId: thread.parentId,
+    ownerId: thread.ownerId,
+    archived: thread.archived,
+    locked: thread.locked,
+    autoArchiveMinutes: thread.autoArchiveDuration,
+    slowmodeSeconds: thread.rateLimitPerUser,
+    messageCount: thread.messageCount,
+    memberCount: thread.memberCount,
+    appliedTagIds: thread.appliedTags,
+    createdAt: thread.createdAt?.toISOString() ?? null,
+    archivedAt: thread.archived ? (thread.archivedAt?.toISOString() ?? null) : null,
+  };
+}
+
+export function serializeInvite(invite: Invite) {
+  return {
+    code: invite.code,
+    url: invite.url,
+    channelId: invite.channelId,
+    inviterId: invite.inviterId,
+    uses: invite.uses,
+    maxUses: invite.maxUses,
+    maxAgeSeconds: invite.maxAge,
+    temporary: invite.temporary,
+    createdAt: invite.createdAt?.toISOString() ?? null,
+    expiresAt: invite.expiresAt?.toISOString() ?? null,
+  };
+}
+
+// The webhook URL holds its secret token, so it is left out here and only create_webhook returns it.
+export function serializeWebhook(webhook: Webhook) {
+  return {
+    id: webhook.id,
+    name: webhook.name,
+    type: WebhookType[webhook.type],
+    channelId: webhook.channelId,
+    creatorId: webhook.owner?.id ?? null,
+    applicationId: webhook.applicationId,
+    avatarUrl: webhook.avatarURL(),
+  };
+}
+
+export function serializeEmoji(emoji: GuildEmoji) {
+  return {
+    id: emoji.id,
+    name: emoji.name,
+    mention: emoji.toString(),
+    animated: emoji.animated,
+    managed: emoji.managed,
+    available: emoji.available,
+    url: emoji.imageURL(),
+    roleIds: [...emoji.roles.cache.keys()],
+    creatorId: emoji.author?.id ?? null,
+  };
+}
+
+export function serializeSticker(sticker: Sticker) {
+  return {
+    id: sticker.id,
+    name: sticker.name,
+    description: sticker.description,
+    tags: sticker.tags,
+    format: StickerFormatType[sticker.format],
+    available: sticker.available,
+    url: sticker.url,
+    creatorId: sticker.user?.id ?? null,
+  };
+}
+
+export function serializeScheduledEvent(event: GuildScheduledEvent) {
+  return {
+    id: event.id,
+    name: event.name,
+    description: event.description,
+    type: eventTypeLabel(event.entityType),
+    status: eventStatusLabel(event.status),
+    startTime: event.scheduledStartAt?.toISOString() ?? null,
+    endTime: event.scheduledEndAt?.toISOString() ?? null,
+    channelId: event.channelId,
+    location: event.entityMetadata?.location ?? null,
+    creatorId: event.creatorId,
+    interestedCount: event.userCount,
+    url: event.url,
   };
 }

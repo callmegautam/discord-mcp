@@ -3,6 +3,7 @@ import { PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import {
   compareRoles,
   permissionName,
+  requireManageOrOwn,
   requireMemberBelowBot,
   requireNotAdministrator,
   requirePermissions,
@@ -133,5 +134,19 @@ describe("requireNotAdministrator", () => {
     expect(() => requireNotAdministrator("sam", perms)).toThrow(
       "sam has Administrator and can't be timed out.",
     );
+  });
+});
+
+describe("requireManageOrOwn", () => {
+  const { ManageGuildExpressions: manage, CreateGuildExpressions: create } = PermissionFlagsBits;
+
+  test("the manage permission covers anything", () => {
+    expect(() => requireManageOrOwn(new PermissionsBitField(manage), manage, create, false)).not.toThrow();
+  });
+
+  test("the create permission only covers what the bot made", () => {
+    const have = new PermissionsBitField(create);
+    expect(() => requireManageOrOwn(have, manage, create, true)).not.toThrow();
+    expect(() => requireManageOrOwn(have, manage, create, false)).toThrow("Manage Guild Expressions");
   });
 });

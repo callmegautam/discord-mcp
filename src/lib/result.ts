@@ -7,10 +7,12 @@ export class UserError extends Error {
   override name = "UserError";
 }
 
-const PERMISSION_HINTS: Record<number, string> = {
+const ERROR_HINTS: Record<number, string> = {
   50001: "The bot can't see this channel or resource, check its role and the channel permission overwrites.",
   50013:
     "The bot lacks a permission for this, or the target is at or above the bot's highest role in Server Settings > Roles.",
+  50074:
+    "Community servers need their rules and updates channels, pick other ones in Server Settings > Community first.",
 };
 
 export function ok(data: unknown): CallToolResult {
@@ -27,7 +29,7 @@ export async function run(handler: () => unknown): Promise<CallToolResult> {
   } catch (error) {
     if (error instanceof UserError) return fail(error.message);
     if (error instanceof DiscordAPIError) {
-      const hint = PERMISSION_HINTS[Number(error.code)];
+      const hint = ERROR_HINTS[Number(error.code)];
       return fail(
         `Discord API error ${error.code} (HTTP ${error.status}): ${error.message}${hint ? `. ${hint}` : ""}`,
       );

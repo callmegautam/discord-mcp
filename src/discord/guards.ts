@@ -38,6 +38,19 @@ export function requirePermissions(
   );
 }
 
+/** Discord only lets a bot allow or deny permissions it holds itself, unless it is an Administrator. */
+export function requirePermissionsToGrant(
+  have: Readonly<PermissionsBitField>,
+  granting: PermissionResolvable[],
+  where: string,
+): void {
+  const missing = have.missing(granting);
+  if (missing.length === 0) return;
+  throw new UserError(
+    `The bot can only allow or deny permissions it has itself. It lacks ${missing.map(permissionName).join(", ")} in ${where}.`,
+  );
+}
+
 // Same ordering as discord.js Role.comparePositions: higher position wins, and on a tie the
 // older role (smaller ID) ranks higher.
 export function compareRoles(a: RankedRole, b: RankedRole): number {

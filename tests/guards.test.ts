@@ -5,6 +5,7 @@ import {
   permissionName,
   requireMemberBelowBot,
   requirePermissions,
+  requirePermissionsToGrant,
   requireRoleBelowBot,
 } from "../src/discord/guards";
 
@@ -42,6 +43,22 @@ describe("requirePermissions", () => {
 
   test("splits flag names into words", () => {
     expect(permissionName("ManageGuildExpressions")).toBe("Manage Guild Expressions");
+  });
+});
+
+describe("requirePermissionsToGrant", () => {
+  const have = new PermissionsBitField([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]);
+
+  test("passes for permissions the bot has", () => {
+    expect(() => requirePermissionsToGrant(have, ["ViewChannel", "SendMessages"], "Test")).not.toThrow();
+  });
+
+  test("names the permissions the bot can't hand out", () => {
+    expect(() =>
+      requirePermissionsToGrant(have, ["ViewChannel", "ManageMessages"], "category Staff"),
+    ).toThrow(
+      "The bot can only allow or deny permissions it has itself. It lacks Manage Messages in category Staff.",
+    );
   });
 });
 

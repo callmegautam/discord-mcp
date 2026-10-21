@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
+### Added
+
+- Channel tools: `create_channel`, `edit_channel`, `delete_channel`, `clone_channel`
+- Permission overwrite tools: `list_channel_permissions`, `set_channel_permission`, `remove_channel_permission`
+- `create_channel` supports text, voice, category, announcement, stage and forum channels, and refuses announcement and stage channels outside Community servers
+- `edit_channel` and `create_channel` refuse fields a channel type doesn't have, such as a topic on a voice channel
+- `set_channel_permission` merges into the existing overwrite, with `inherit` to reset single permissions
+- Prechecks name the missing Manage Channels or Manage Roles permission, and the permissions the bot can't allow or deny because it lacks them
+- `list_channels` returns `slowmodeSeconds`
+- Hint on Discord's error 50074 when deleting a channel a Community server requires
+
 ## [0.2.0] - 2026-10-21
 
 ### Added
@@ -26,6 +39,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/callmegautam/discord-mcp/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/callmegautam/discord-mcp/releases/tag/v0.1.0

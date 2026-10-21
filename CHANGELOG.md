@@ -25,3 +25,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Default server resolution through `DISCORD_GUILD_ID`, or the only server the bot is in
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
+
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/callmegautam/discord-mcp/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/callmegautam/discord-mcp/releases/tag/v0.1.0

@@ -3,7 +3,9 @@ import {
   GuildVerificationLevel,
   type Guild,
   type GuildBasedChannel,
+  OverwriteType,
   type GuildMember,
+  type PermissionOverwrites,
   type Role,
 } from "discord.js";
 
@@ -37,6 +39,7 @@ export function serializeChannel(channel: GuildBasedChannel) {
     position: "position" in channel ? channel.position : null,
     topic: "topic" in channel ? channel.topic : null,
     nsfw: "nsfw" in channel ? channel.nsfw : false,
+    slowmodeSeconds: "rateLimitPerUser" in channel ? channel.rateLimitPerUser : null,
   };
 }
 
@@ -65,5 +68,18 @@ export function serializeMember(member: GuildMember) {
     roles: member.roles.cache
       .filter((role) => role.id !== member.guild.id)
       .map((role) => ({ id: role.id, name: role.name })),
+  };
+}
+
+export function serializeOverwrite(
+  overwrite: Pick<PermissionOverwrites, "id" | "type" | "allow" | "deny">,
+  name: string | null,
+) {
+  return {
+    id: overwrite.id,
+    type: overwrite.type === OverwriteType.Role ? "role" : "member",
+    name,
+    allow: overwrite.allow.toArray(),
+    deny: overwrite.deny.toArray(),
   };
 }

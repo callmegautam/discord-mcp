@@ -78,6 +78,26 @@ describe("registerTools", () => {
       "list_guilds",
       "get_guild",
       "list_channels",
+      "create_channel",
+      "edit_channel",
+      "delete_channel",
+      "clone_channel",
+      "list_channel_permissions",
+      "set_channel_permission",
+      "remove_channel_permission",
+      "list_roles",
+      "list_members",
+      "get_member",
+    ]);
+  });
+
+  test("read-only mode keeps only the read tools", () => {
+    const readOnly = { ...ctx, config: { ...ctx.config, readOnly: true } };
+    expect(registerTools(new McpServer({ name: "test", version: "0.0.0" }), readOnly)).toEqual([
+      "list_guilds",
+      "get_guild",
+      "list_channels",
+      "list_channel_permissions",
       "list_roles",
       "list_members",
       "get_member",

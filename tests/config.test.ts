@@ -1,32 +1,55 @@
 import { describe, expect, test } from "bun:test";
-import { loadConfig } from "../src/config";
+import { loadConfig, type Config } from "../src/config";
 
 const token = "test-token";
 const guildId = "123456789012345678";
+const otherGuildId = "876543210987654321";
+
+const defaults: Config = {
+  token,
+  defaultGuildId: undefined,
+  allowedGuildIds: [],
+  readOnly: false,
+  disabledTools: [],
+  logLevel: "info",
+};
 
 describe("loadConfig", () => {
-  test("reads token, guild id and log level", () => {
-    expect(loadConfig({ DISCORD_TOKEN: token, DISCORD_GUILD_ID: guildId, LOG_LEVEL: "debug" })).toEqual({
+  test("reads every setting", () => {
+    expect(
+      loadConfig({
+        DISCORD_TOKEN: token,
+        DISCORD_GUILD_ID: guildId,
+        ALLOWED_GUILD_IDS: `${guildId},${otherGuildId}`,
+        READ_ONLY: "true",
+        DISABLED_TOOLS: "list_members,get_member",
+        LOG_LEVEL: "debug",
+      }),
+    ).toEqual({
       token,
       defaultGuildId: guildId,
+      allowedGuildIds: [guildId, otherGuildId],
+      readOnly: true,
+      disabledTools: ["list_members", "get_member"],
       logLevel: "debug",
     });
   });
 
-  test("defaults log level to info and leaves guild id unset", () => {
-    expect(loadConfig({ DISCORD_TOKEN: token })).toEqual({
-      token,
-      defaultGuildId: undefined,
-      logLevel: "info",
-    });
+  test("uses defaults when only the token is set", () => {
+    expect(loadConfig({ DISCORD_TOKEN: token })).toEqual(defaults);
   });
 
   test("treats empty values from an env file as unset", () => {
-    expect(loadConfig({ DISCORD_TOKEN: token, DISCORD_GUILD_ID: "", LOG_LEVEL: "" })).toEqual({
-      token,
-      defaultGuildId: undefined,
-      logLevel: "info",
-    });
+    expect(
+      loadConfig({
+        DISCORD_TOKEN: token,
+        DISCORD_GUILD_ID: "",
+        ALLOWED_GUILD_IDS: "",
+        READ_ONLY: "",
+        DISABLED_TOOLS: "",
+        LOG_LEVEL: "",
+      }),
+    ).toEqual(defaults);
   });
 
   test("trims whitespace around the token", () => {
@@ -47,5 +70,39 @@ describe("loadConfig", () => {
 
   test("rejects an unknown log level", () => {
     expect(() => loadConfig({ DISCORD_TOKEN: token, LOG_LEVEL: "loud" })).toThrow("LOG_LEVEL");
+  });
+
+  test("tolerates spaces and stray commas in lists", () => {
+    const config = loadConfig({
+      DISCORD_TOKEN: token,
+      ALLOWED_GUILD_IDS: ` ${guildId} , ,${otherGuildId},`,
+      DISABLED_TOOLS: " list_members ,",
+    });
+    expect(config.allowedGuildIds).toEqual([guildId, otherGuildId]);
+    expect(config.disabledTools).toEqual(["list_members"]);
+  });
+
+  test("rejects a malformed id in ALLOWED_GUILD_IDS", () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: token, ALLOWED_GUILD_IDS: `${guildId},abc` })).toThrow(
+      "ALLOWED_GUILD_IDS",
+    );
+  });
+
+  test("rejects a default guild that is not on the allowlist", () => {
+    expect(() =>
+      loadConfig({ DISCORD_TOKEN: token, DISCORD_GUILD_ID: guildId, ALLOWED_GUILD_IDS: otherGuildId }),
+    ).toThrow("DISCORD_GUILD_ID: must be one of ALLOWED_GUILD_IDS");
+  });
+
+  test("parses READ_ONLY as a boolean", () => {
+    expect(loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "false" }).readOnly).toBe(false);
+    expect(loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "1" }).readOnly).toBe(true);
+    expect(() => loadConfig({ DISCORD_TOKEN: token, READ_ONLY: "maybe" })).toThrow("READ_ONLY");
+  });
+
+  test("rejects tool names that are not snake_case", () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: token, DISABLED_TOOLS: "List-Members" })).toThrow(
+      "DISABLED_TOOLS",
+    );
   });
 });

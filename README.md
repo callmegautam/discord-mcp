@@ -19,6 +19,22 @@ Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GU
 
 All tools in this version are read-only. Management tools (channels, roles, moderation, messages) are coming, see [CHANGELOG.md](CHANGELOG.md).
 
+## Safety
+
+The bot can only do what its Discord permissions allow. These settings narrow that down further:
+
+| Variable            | What it does                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| `READ_ONLY`         | `true` registers only tools marked `readOnlyHint`. Nothing that can change the server is exposed. |
+| `ALLOWED_GUILD_IDS` | Comma separated server IDs. Other servers the bot is in are hidden and refused.                   |
+| `DISABLED_TOOLS`    | Comma separated tool names to switch off, for example `list_members,get_member`.                  |
+
+A typo in any of them stops the server at startup instead of being silently ignored: an unknown tool name, an ID that is not a server the bot is in, or a `DISCORD_GUILD_ID` that is not on the allowlist.
+
+Every tool declares MCP annotations, and startup refuses a tool that doesn't: `readOnlyHint` on all of them, `destructiveHint` on anything that writes, and a `reason` argument for the audit log on anything destructive. Read-only mode is driven by those same annotations, so it can't drift from what the client is told.
+
+Write tools check permissions and role order before calling Discord. When the bot lacks a permission, or a role or member sits at or above the bot's highest role, the error says which one and how to fix it instead of returning a bare 403.
+
 ## Setup
 
 ### 1. Create the bot
@@ -41,8 +57,13 @@ Put the token in `.env`:
 ```sh
 DISCORD_TOKEN=your-bot-token
 DISCORD_GUILD_ID=optional-default-server-id
+ALLOWED_GUILD_IDS=
+READ_ONLY=false
+DISABLED_TOOLS=
 LOG_LEVEL=info
 ```
+
+See [Safety](#safety) for the three middle settings.
 
 `.env` is git ignored and docker ignored. The token is passed to the container at runtime and is never baked into the image.
 
@@ -95,8 +116,9 @@ bunx @modelcontextprotocol/inspector bun run src/index.ts
 src/
   index.ts          entry point: config, Discord login, MCP over stdio
   config.ts         environment validation
-  discord/          Discord client, guild resolution, response shaping
-  tools/            one file per tool group, registered in tools/index.ts
+  discord/          Discord client, guild resolution, permission checks, response shaping
+  tools/            one file per tool group, registered in tools/index.ts, policy.ts
+                    enforces annotations, READ_ONLY and DISABLED_TOOLS
   lib/              logger, shared schemas, tool result helpers
 tests/              bun test suites
 ```

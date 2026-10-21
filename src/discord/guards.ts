@@ -1,4 +1,11 @@
-import type { Guild, GuildMember, PermissionResolvable, PermissionsBitField } from "discord.js";
+import {
+  PermissionFlagsBits,
+  type Guild,
+  type GuildMember,
+  type PermissionResolvable,
+  type PermissionsBitField,
+  type Role,
+} from "discord.js";
 import { UserError } from "../lib/result";
 
 interface RankedRole {
@@ -90,4 +97,11 @@ export function botMember(guild: Guild): GuildMember {
 
 export function rankMember(member: GuildMember): RankedMember {
   return { id: member.id, displayName: member.displayName, highestRole: member.roles.highest };
+}
+
+/** Manage Roles plus a role below the bot's highest, which editing, deleting and assigning a role need. */
+export function requireManageableRole(guild: Guild, role: Role): void {
+  const me = botMember(guild);
+  requirePermissions(me.permissions, [PermissionFlagsBits.ManageRoles]);
+  requireRoleBelowBot(guild.id, me.roles.highest, role);
 }

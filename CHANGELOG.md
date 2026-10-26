@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-26
+
+### Added
+
+- `audit_permissions` flags risky permission setups with a severity and a suggested fix: dangerous permissions on `@everyone` server wide or in a channel overwrite, roles and bots with Administrator, staff and log channels everyone can see, verification level, explicit content filter and moderator 2FA, and powerful roles above the bot. It only reads, so it stays available in read-only mode
+- MCP resource `discord://guilds/{guild_id}/snapshot` with a server's settings, roles with permissions and member counts, and channels with their permission overwrites, listed for every allowed server
+- MCP prompt `audit_server_permissions` that walks through the audit and proposes fixes as tool calls without applying them
+
 ## [1.0.0] - 2026-10-21
 
 ### Added
@@ -103,7 +111,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/callmegautam/discord-mcp/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/callmegautam/discord-mcp/compare/v0.5.0...v0.6.0

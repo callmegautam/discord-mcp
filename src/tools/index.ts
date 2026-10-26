@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { registerAuditTools } from "./audit";
 import { registerChannelTools } from "./channels";
 import type { ToolContext } from "./context";
 import { registerEmojiTools } from "./emojis";
@@ -29,6 +30,7 @@ export const TOOL_GROUPS: ReadonlyArray<{
   { title: "Webhooks", register: registerWebhookTools },
   { title: "Emojis and stickers", register: registerEmojiTools },
   { title: "Scheduled events", register: registerEventTools },
+  { title: "Audit", register: registerAuditTools },
 ];
 
 /** Registers every tool, then applies READ_ONLY and DISABLED_TOOLS. Returns the active tool names. */

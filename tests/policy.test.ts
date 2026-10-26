@@ -139,6 +139,7 @@ describe("registerTools", () => {
       "create_scheduled_event",
       "edit_scheduled_event",
       "delete_scheduled_event",
+      "audit_permissions",
     ]);
   });
 
@@ -166,6 +167,7 @@ describe("registerTools", () => {
       "list_emojis",
       "list_stickers",
       "list_scheduled_events",
+      "audit_permissions",
     ]);
   });
 });

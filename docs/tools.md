@@ -15,6 +15,7 @@ Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GU
 - Webhooks: [`list_webhooks`](#list_webhooks), [`create_webhook`](#create_webhook), [`delete_webhook`](#delete_webhook)
 - Emojis and stickers: [`list_emojis`](#list_emojis), [`create_emoji`](#create_emoji), [`delete_emoji`](#delete_emoji), [`list_stickers`](#list_stickers), [`create_sticker`](#create_sticker), [`delete_sticker`](#delete_sticker)
 - Scheduled events: [`list_scheduled_events`](#list_scheduled_events), [`create_scheduled_event`](#create_scheduled_event), [`edit_scheduled_event`](#edit_scheduled_event), [`delete_scheduled_event`](#delete_scheduled_event)
+- Audit: [`audit_permissions`](#audit_permissions)
 
 ## Server
 
@@ -863,3 +864,13 @@ Destructive, hidden when `READ_ONLY=true`.
 | ---------- | --------------------------- | -------- | ------------------------------------------------------ |
 | `event_id` | ID                          | yes      | The scheduled event ID.                                |
 | `reason`   | string, 1 to 512 characters |          | Why this is being done. Shown in the server audit log. |
+
+## Audit
+
+### `audit_permissions`
+
+Check a server for risky permission setups: dangerous permissions on @everyone, roles and bots with Administrator, staff or log channels anyone can see, weak verification, content filter and 2FA settings, and powerful roles above the bot. Returns findings with a severity and a suggested fix, most severe first. Changes nothing.
+
+Read-only.
+
+No inputs besides `guild_id`.

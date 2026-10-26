@@ -72,6 +72,7 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `create_scheduled_event`    | Schedule a voice, stage or external event                                 |
 | `edit_scheduled_event`      | Change an event, or start, end or cancel it                               |
 | `delete_scheduled_event`    | Delete an event                                                           |
+| `audit_permissions`         | Flag risky permission setups, with a severity and a suggested fix         |
 
 Every tool's inputs, types and limits are listed in the [tool reference](docs/tools.md).
 
@@ -84,6 +85,22 @@ Every write tool takes an optional `reason` that shows up in the server audit lo
 The message tools also work inside threads and forum posts, pass the thread ID as `channel_id`.
 
 Webhook URLs contain a secret token, so `list_webhooks` leaves them out and only `create_webhook` returns the URL of the webhook it made. `create_emoji`, `create_sticker`, `create_webhook` and `edit_guild` take https URLs only, the file is downloaded and checked against Discord's size limit before it is uploaded.
+
+## Resources
+
+| Resource                               | What it holds                                                                                                         |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `discord://guilds/{guild_id}/snapshot` | A server's settings, roles with permissions and member counts, and channels with their permission overwrites, as JSON |
+
+The client can attach a snapshot to the conversation, so the assistant knows the server's layout without a chain of tool calls. One snapshot is listed per server the bot is in, limited to `ALLOWED_GUILD_IDS`.
+
+## Prompts
+
+| Prompt                     | What it does                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `audit_server_permissions` | Runs `audit_permissions`, explains each finding and proposes fixes as tool calls, without applying them |
+
+`audit_permissions` checks for dangerous permissions on `@everyone`, server wide and in channel overwrites, roles and bots with Administrator, staff or log channels that everyone can see, verification level, content filter and moderator 2FA, and powerful roles the bot sits below. It only reads, so it stays available in read-only mode.
 
 ## Safety
 
@@ -219,10 +236,13 @@ They use the token from `.env`, lock the server to that one ID through `ALLOWED_
 ```
 src/
   index.ts          entry point: config, Discord login, MCP over stdio
+  server.ts         builds the MCP server with its tools, resources and prompts
   config.ts         environment validation
   discord/          Discord client, guild resolution, permission checks, response shaping
   tools/            one file per tool group, registered in tools/index.ts, policy.ts
                     enforces annotations, READ_ONLY and DISABLED_TOOLS
+  resources/        MCP resources (server snapshot)
+  prompts/          MCP prompts
   lib/              logger, shared schemas, tool result helpers
 scripts/            tool reference generator
 docs/               generated tool reference

@@ -1,12 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import pkg from "../package.json" with { type: "json" };
 import type { Client } from "discord.js";
 import { loadConfig, type Config } from "./config";
 import { createDiscordClient } from "./discord/client";
 import { isGuildAllowed } from "./discord/resolve";
 import { logger, setLogLevel } from "./lib/logger";
-import { registerTools } from "./tools";
+import { createMcpServer } from "./server";
 
 function checkAllowedGuilds(client: Client<true>, config: Config): void {
   if (config.allowedGuildIds.length === 0) return;
@@ -32,9 +30,8 @@ async function main(): Promise<void> {
   logger.info(`logged in as ${client.user.tag}, in ${client.guilds.cache.size} server(s)`);
   checkAllowedGuilds(client, config);
 
-  const server = new McpServer({ name: "discord-mcp", version: pkg.version });
-  const active = registerTools(server, { client, config });
-  logger.info(`${active.length} tool(s) active${config.readOnly ? ", read-only mode" : ""}`);
+  const { server, tools } = createMcpServer({ client, config });
+  logger.info(`${tools.length} tool(s) active${config.readOnly ? ", read-only mode" : ""}`);
 
   let shuttingDown = false;
   const shutdown = async (reason: string): Promise<void> => {

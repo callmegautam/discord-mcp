@@ -25,6 +25,7 @@ import {
 } from "discord.js";
 import type { Config } from "../config";
 import { isGuildAllowed, resolveGuild } from "../discord/resolve";
+import { snapshotGuild, type GuildSnapshot } from "../discord/snapshot";
 import { UserError } from "../lib/result";
 
 export interface ToolContext {
@@ -112,6 +113,16 @@ export async function loadAllMembers(guild: Guild): Promise<void> {
     pending.catch(() => membersLoaded.delete(guild));
   }
   await pending;
+}
+
+/** A fresh snapshot of the server's settings, roles and channels. */
+export async function fetchSnapshot(guild: Guild): Promise<GuildSnapshot> {
+  const [, , channels] = await Promise.all([guild.fetch(), guild.roles.fetch(), guild.channels.fetch()]);
+  await loadAllMembers(guild);
+  return snapshotGuild(
+    guild,
+    [...channels.values()].filter((channel): channel is NonThreadGuildBasedChannel => channel !== null),
+  );
 }
 
 export async function getMember(guild: Guild, userId: string): Promise<GuildMember> {

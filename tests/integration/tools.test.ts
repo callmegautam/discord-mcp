@@ -494,6 +494,56 @@ describe.skipIf(!enabled)("integration", () => {
     });
   });
 
+  describe("server insight", () => {
+    interface Snapshot {
+      guild: { id: string };
+      roles: { id: string; everyone: boolean; memberCount: number }[];
+      channels: { id: string; name: string }[];
+    }
+    interface Audit {
+      findings: { check: string; target: string }[];
+    }
+    const flagged = (audit: Audit, channelId: string) =>
+      audit.findings.some(
+        (finding) => finding.check === "public_private_channel" && finding.target.includes(channelId),
+      );
+
+    test("lists and reads the server snapshot resource", async () => {
+      const uri = `discord://guilds/${testGuildId()}/snapshot`;
+      const { resources } = await server.client.listResources();
+      expect(resources.map((resource) => resource.uri)).toContain(uri);
+
+      const { contents } = await server.client.readResource({ uri });
+      const content = contents[0];
+      const snapshot = JSON.parse(content && "text" in content ? content.text : "{}") as Snapshot;
+      expect(snapshot.guild.id).toBe(testGuildId());
+      expect(snapshot.channels.map((channel) => channel.id)).toContain(text.id);
+      expect(snapshot.roles.find((role) => role.everyone)?.memberCount).toBeGreaterThan(0);
+    });
+
+    test("flags a public log channel until @everyone is denied", async () => {
+      const logs = await server.call<Channel>("create_channel", { name: `${PREFIX}-mod-log`, reason });
+      expect(flagged(await server.call<Audit>("audit_permissions"), logs.id)).toBe(true);
+
+      await server.call("set_channel_permission", {
+        channel_id: logs.id,
+        target_id: testGuildId(),
+        deny: ["ViewChannel"],
+        reason,
+      });
+      expect(flagged(await server.call<Audit>("audit_permissions"), logs.id)).toBe(false);
+      await server.call("delete_channel", { channel_id: logs.id, reason });
+    });
+
+    test("serves the audit prompt", async () => {
+      const { messages } = await server.client.getPrompt({ name: "audit_server_permissions", arguments: {} });
+      expect(messages[0]?.content).toMatchObject({
+        type: "text",
+        text: expect.stringContaining("audit_permissions"),
+      });
+    });
+  });
+
   describe("read-only mode", () => {
     test("exposes only read tools and refuses write tools", async () => {
       const readOnly = await startServer({ READ_ONLY: "true" });

@@ -12,7 +12,15 @@ export interface Config {
   messageContent: boolean;
   disabledTools: string[];
   logLevel: LogLevel;
+  transport: Transport;
+  http: { host: string; port: number; token?: string };
 }
+
+export const TRANSPORTS = ["stdio", "http"] as const;
+export type Transport = (typeof TRANSPORTS)[number];
+
+// Anyone holding the token gets every tool the bot exposes, so it has to be hard to guess.
+export const MIN_HTTP_TOKEN_LENGTH = 32;
 
 // docker --env-file passes `KEY=` as an empty string, treat that as unset.
 const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
@@ -47,6 +55,25 @@ const envSchema = z
     ),
     DISABLED_TOOLS: commaList(z.string().regex(/^[a-z_]+$/, "must be snake_case tool names")),
     LOG_LEVEL: z.preprocess(emptyToUndefined, z.enum(LOG_LEVELS).default("info")),
+    TRANSPORT: z.preprocess(emptyToUndefined, z.enum(TRANSPORTS).default("stdio")),
+    HTTP_HOST: z.preprocess(emptyToUndefined, z.string().trim().min(1).default("127.0.0.1")),
+    HTTP_PORT: z.preprocess(
+      emptyToUndefined,
+      z.coerce
+        .number({ error: "must be a port number" })
+        .int("must be a port number")
+        .min(1, "must be 1 to 65535")
+        .max(65535, "must be 1 to 65535")
+        .default(3000),
+    ),
+    HTTP_TOKEN: z.preprocess(
+      emptyToUndefined,
+      z
+        .string()
+        .trim()
+        .min(MIN_HTTP_TOKEN_LENGTH, `must be at least ${MIN_HTTP_TOKEN_LENGTH} characters`)
+        .optional(),
+    ),
   })
   .refine(
     (env) =>
@@ -54,7 +81,11 @@ const envSchema = z
       env.ALLOWED_GUILD_IDS.length === 0 ||
       env.ALLOWED_GUILD_IDS.includes(env.DISCORD_GUILD_ID),
     { path: ["DISCORD_GUILD_ID"], message: "must be one of ALLOWED_GUILD_IDS" },
-  );
+  )
+  .refine((env) => env.TRANSPORT !== "http" || env.HTTP_TOKEN !== undefined, {
+    path: ["HTTP_TOKEN"],
+    message: "is required when TRANSPORT=http, generate one with `openssl rand -hex 32`",
+  });
 
 export function loadConfig(env: Record<string, string | undefined>): Config {
   const parsed = envSchema.safeParse(env);
@@ -71,5 +102,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
     messageContent: parsed.data.MESSAGE_CONTENT,
     disabledTools: parsed.data.DISABLED_TOOLS,
     logLevel: parsed.data.LOG_LEVEL,
+    transport: parsed.data.TRANSPORT,
+    http: { host: parsed.data.HTTP_HOST, port: parsed.data.HTTP_PORT, token: parsed.data.HTTP_TOKEN },
   };
 }

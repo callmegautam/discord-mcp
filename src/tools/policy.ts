@@ -36,6 +36,7 @@ export function checkAnnotations(name: string, tool: RegisteredTool): void {
 export function applyToolPolicy(
   tools: ReadonlyMap<string, RegisteredTool>,
   config: Pick<Config, "readOnly" | "disabledTools">,
+  log = true,
 ): string[] {
   for (const [name, tool] of tools) checkAnnotations(name, tool);
 
@@ -50,10 +51,10 @@ export function applyToolPolicy(
   for (const [name, tool] of tools) {
     if (config.disabledTools.includes(name)) {
       tool.remove();
-      logger.info(`tool ${name} disabled by DISABLED_TOOLS`);
+      if (log) logger.info(`tool ${name} disabled by DISABLED_TOOLS`);
     } else if (config.readOnly && !tool.annotations?.readOnlyHint) {
       tool.remove();
-      logger.info(`tool ${name} skipped, READ_ONLY is on`);
+      if (log) logger.info(`tool ${name} skipped, READ_ONLY is on`);
     } else {
       active.push(name);
     }

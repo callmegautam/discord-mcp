@@ -36,8 +36,8 @@ export const TOOL_GROUPS: ReadonlyArray<{
 ];
 
 /** Registers every tool, then applies READ_ONLY and DISABLED_TOOLS. Returns the active tool names. */
-export function registerTools(server: McpServer, ctx: ToolContext): string[] {
+export function registerTools(server: McpServer, ctx: ToolContext, log = true): string[] {
   const { server: tracked, tools } = trackTools(server);
   for (const group of TOOL_GROUPS) group.register(tracked, ctx);
-  return applyToolPolicy(tools, ctx.config);
+  return applyToolPolicy(tools, ctx.config, log);
 }

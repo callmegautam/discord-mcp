@@ -204,7 +204,7 @@ Pull the published image from GitHub Container Registry:
 docker pull ghcr.io/callmegautam/discord-mcp:1
 ```
 
-Images are tagged with the full version (`1.0.0`), the minor (`1.0`), the major (`1`) and `latest`, for `linux/amd64` and `linux/arm64`.
+Images are tagged with the full version (`1.3.0`), the minor (`1.3`), the major (`1`) and `latest`, for `linux/amd64` and `linux/arm64`.
 
 Or build it yourself from a checkout:
 
@@ -241,6 +241,43 @@ For other MCP clients, use the same command:
   }
 }
 ```
+
+### Or run it as a long-lived HTTP server
+
+By default every MCP client starts its own container over stdio. With `TRANSPORT=http` one container keeps running, logs in to Discord once, and serves any number of clients over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http), each in its own session.
+
+Every request needs a bearer token, and the server refuses to start in HTTP mode without one. Generate a token and add it to `.env`:
+
+```sh
+echo "HTTP_TOKEN=$(openssl rand -hex 32)" >> .env
+```
+
+Start the container, published on localhost only:
+
+```sh
+docker run -d --name discord-mcp --restart unless-stopped \
+  --env-file /absolute/path/to/discord-mcp/.env -e TRANSPORT=http \
+  -p 127.0.0.1:3000:3000 \
+  --health-cmd "wget -qO- http://127.0.0.1:3000/health || exit 1" \
+  ghcr.io/callmegautam/discord-mcp:1
+```
+
+Then point Claude Code at it:
+
+```sh
+claude mcp add --transport http -s user \
+  --header "Authorization: Bearer your-http-token" \
+  discord http://127.0.0.1:3000/mcp
+```
+
+| Variable     | What it does                                                                           |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `TRANSPORT`  | `stdio` (default) or `http`                                                            |
+| `HTTP_TOKEN` | Bearer token clients must send, at least 32 characters. Required with `TRANSPORT=http` |
+| `HTTP_HOST`  | Address to listen on. Defaults to `127.0.0.1`, and to `0.0.0.0` in the Docker image    |
+| `HTTP_PORT`  | Port to listen on, defaults to `3000`                                                  |
+
+The MCP endpoint is `/mcp`. `/health` answers without a token, for container health checks. Anyone with the token can use every tool the bot exposes, so keep the port off the public internet: publish it on `127.0.0.1` as above, or put the server behind a reverse proxy with TLS. Sessions idle for an hour are closed, and clients start a new one on their next request.
 
 ## Development
 
@@ -280,7 +317,8 @@ They use the token from `.env`, lock the server to that one ID through `ALLOWED_
 
 ```
 src/
-  index.ts          entry point: config, Discord login, MCP over stdio
+  index.ts          entry point: config, Discord login, MCP over stdio or HTTP
+  http.ts           Streamable HTTP server with bearer token auth and per-session MCP servers
   server.ts         builds the MCP server with its tools, resources and prompts
   config.ts         environment validation
   discord/          Discord client, guild resolution, permission checks, response shaping

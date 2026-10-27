@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-27
+
+### Added
+
+- HTTP transport: `TRANSPORT=http` runs one long-lived server over Streamable HTTP instead of a process per MCP client. Each client gets its own session, all sharing one Discord login. Sessions idle for an hour are closed
+- Bearer token auth for HTTP mode through `HTTP_TOKEN`, compared in constant time. Startup fails in HTTP mode without a token or with one shorter than 32 characters
+- `HTTP_HOST` (default `127.0.0.1`, `0.0.0.0` in the Docker image) and `HTTP_PORT` (default `3000`), and an unauthenticated `/health` endpoint for container health checks
+- The Docker image exposes port 3000
+
 ## [1.2.0] - 2026-10-27
 
 ### Added
@@ -124,7 +133,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/callmegautam/discord-mcp/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/callmegautam/discord-mcp/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/callmegautam/discord-mcp/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...v1.0.0

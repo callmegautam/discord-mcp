@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { enabled, PREFIX, startServer, testGuildId, type TestServer } from "./harness";
 
 interface Named {
@@ -644,6 +646,67 @@ describe.skipIf(!enabled)("integration", () => {
         reason,
       });
       expect(error).toContain("nothing was changed");
+    });
+  });
+
+  describe("http transport", () => {
+    test("serves parallel sessions behind the token and shuts down on SIGTERM", async () => {
+      const guildId = testGuildId();
+      const port = 30000 + Math.floor(Math.random() * 20000);
+      const token = crypto.randomUUID() + crypto.randomUUID();
+      const child = Bun.spawn(["bun", "run", "src/index.ts"], {
+        env: {
+          ...process.env,
+          TRANSPORT: "http",
+          HTTP_PORT: String(port),
+          HTTP_TOKEN: token,
+          DISCORD_GUILD_ID: guildId,
+          ALLOWED_GUILD_IDS: guildId,
+          READ_ONLY: "true",
+          DISABLED_TOOLS: "",
+          LOG_LEVEL: "warn",
+        },
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "inherit",
+      });
+      const base = `http://127.0.0.1:${port}`;
+      try {
+        for (let attempt = 0; ; attempt++) {
+          const healthy = await fetch(`${base}/health`).then(
+            (r) => r.ok,
+            () => false,
+          );
+          if (healthy) break;
+          if (attempt > 100) throw new Error("the http server did not come up");
+          await Bun.sleep(200);
+        }
+        expect((await fetch(`${base}/mcp`, { method: "POST" })).status).toBe(401);
+
+        const connect = async () => {
+          const client = new McpClient({ name: "integration-http", version: "0.0.0" });
+          await client.connect(
+            new StreamableHTTPClientTransport(new URL(`${base}/mcp`), {
+              requestInit: { headers: { Authorization: `Bearer ${token}` } },
+            }),
+          );
+          return client;
+        };
+        const clients = await Promise.all([connect(), connect()]);
+        const guilds = await Promise.all(
+          clients.map((client) => client.callTool({ name: "get_guild", arguments: {} })),
+        );
+        for (const result of guilds) {
+          const content = (result.content as { type: string; text: string }[])[0];
+          expect(JSON.parse(content?.text ?? "{}").id).toBe(guildId);
+        }
+        const { tools } = await clients[0]!.listTools();
+        expect(tools.every((tool) => tool.annotations?.readOnlyHint === true)).toBe(true);
+        await Promise.all(clients.map((client) => client.close()));
+      } finally {
+        child.kill("SIGTERM");
+      }
+      expect(await child.exited).toBe(0);
     });
   });
 

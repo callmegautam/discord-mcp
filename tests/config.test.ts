@@ -4,6 +4,7 @@ import { loadConfig, type Config } from "../src/config";
 const token = "test-token";
 const guildId = "123456789012345678";
 const otherGuildId = "876543210987654321";
+const httpToken = "a".repeat(32);
 
 const defaults: Config = {
   token,
@@ -13,6 +14,8 @@ const defaults: Config = {
   messageContent: false,
   disabledTools: [],
   logLevel: "info",
+  transport: "stdio",
+  http: { host: "127.0.0.1", port: 3000, token: undefined },
 };
 
 describe("loadConfig", () => {
@@ -26,6 +29,10 @@ describe("loadConfig", () => {
         MESSAGE_CONTENT: "true",
         DISABLED_TOOLS: "list_members,get_member",
         LOG_LEVEL: "debug",
+        TRANSPORT: "http",
+        HTTP_HOST: "0.0.0.0",
+        HTTP_PORT: "8080",
+        HTTP_TOKEN: httpToken,
       }),
     ).toEqual({
       token,
@@ -35,6 +42,8 @@ describe("loadConfig", () => {
       messageContent: true,
       disabledTools: ["list_members", "get_member"],
       logLevel: "debug",
+      transport: "http",
+      http: { host: "0.0.0.0", port: 8080, token: httpToken },
     });
   });
 
@@ -52,6 +61,10 @@ describe("loadConfig", () => {
         MESSAGE_CONTENT: "",
         DISABLED_TOOLS: "",
         LOG_LEVEL: "",
+        TRANSPORT: "",
+        HTTP_HOST: "",
+        HTTP_PORT: "",
+        HTTP_TOKEN: "",
       }),
     ).toEqual(defaults);
   });
@@ -115,5 +128,25 @@ describe("loadConfig", () => {
     expect(() => loadConfig({ DISCORD_TOKEN: token, DISABLED_TOOLS: "List-Members" })).toThrow(
       "DISABLED_TOOLS",
     );
+  });
+
+  test("requires a long enough HTTP_TOKEN for the http transport", () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: token, TRANSPORT: "http" })).toThrow(
+      "HTTP_TOKEN: is required when TRANSPORT=http",
+    );
+    expect(() => loadConfig({ DISCORD_TOKEN: token, TRANSPORT: "http", HTTP_TOKEN: "short" })).toThrow(
+      "HTTP_TOKEN: must be at least 32 characters",
+    );
+    expect(loadConfig({ DISCORD_TOKEN: token, TRANSPORT: "http", HTTP_TOKEN: httpToken }).http.token).toBe(
+      httpToken,
+    );
+  });
+
+  test("rejects an unknown transport and a bad port", () => {
+    expect(() => loadConfig({ DISCORD_TOKEN: token, TRANSPORT: "carrier-pigeon" })).toThrow("TRANSPORT");
+    expect(() => loadConfig({ DISCORD_TOKEN: token, HTTP_PORT: "70000" })).toThrow(
+      "HTTP_PORT: must be 1 to 65535",
+    );
+    expect(() => loadConfig({ DISCORD_TOKEN: token, HTTP_PORT: "web" })).toThrow("HTTP_PORT");
   });
 });

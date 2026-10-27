@@ -16,6 +16,7 @@ Every tool takes an optional `guild_id`. Without it, the server uses `DISCORD_GU
 - Emojis and stickers: [`list_emojis`](#list_emojis), [`create_emoji`](#create_emoji), [`delete_emoji`](#delete_emoji), [`list_stickers`](#list_stickers), [`create_sticker`](#create_sticker), [`delete_sticker`](#delete_sticker)
 - Scheduled events: [`list_scheduled_events`](#list_scheduled_events), [`create_scheduled_event`](#create_scheduled_event), [`edit_scheduled_event`](#edit_scheduled_event), [`delete_scheduled_event`](#delete_scheduled_event)
 - Audit: [`audit_permissions`](#audit_permissions)
+- Templates: [`export_template`](#export_template), [`apply_template`](#apply_template)
 
 ## Server
 
@@ -874,3 +875,57 @@ Check a server for risky permission setups: dangerous permissions on @everyone, 
 Read-only.
 
 No inputs besides `guild_id`.
+
+## Templates
+
+### `export_template`
+
+Turn a server's roles, categories, channels and permission overwrites into a JSON template that apply_template accepts, to save a layout or copy it to another server. Bot roles, member overwrites and unsupported channel types are left out and listed in notes.
+
+Read-only.
+
+No inputs besides `guild_id`.
+
+### `apply_template`
+
+Create the roles, categories and channels a JSON template describes, with their permissions. It only adds: roles, categories and channels whose name already exists are skipped and nothing is edited or deleted. The whole template is checked before the first change. Run it with dry_run first to see what would be created.
+
+Writes, hidden when `READ_ONLY=true`.
+
+| Input                                                 | Type                                              | Required | Description                                                                                                 |
+| ----------------------------------------------------- | ------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `template`                                            | object                                            | yes      | The layout to create. Overwrites refer to roles by name, so a template works on any server.                 |
+| `template.roles`                                      | list of objects, up to 50 items                   |          | Roles, highest first. New roles keep this order, placed just above @everyone. Default `[]`.                 |
+| `template.roles[].name`                               | string, 1 to 100 characters                       | yes      |                                                                                                             |
+| `template.roles[].color`                              | hex color                                         |          | Hex color like #5865f2.                                                                                     |
+| `template.roles[].hoist`                              | boolean                                           |          | Show members with this role separately in the sidebar.                                                      |
+| `template.roles[].mentionable`                        | boolean                                           |          |                                                                                                             |
+| `template.roles[].permissions`                        | list of names                                     |          | Permission names to give the role, e.g. ViewChannel. Default `[]`.                                          |
+| `template.categories`                                 | list of objects                                   |          | Default `[]`.                                                                                               |
+| `template.categories[].name`                          | string, 1 to 100 characters                       | yes      |                                                                                                             |
+| `template.categories[].overwrites`                    | list of objects                                   |          | Default `[]`.                                                                                               |
+| `template.categories[].overwrites[].role`             | string, 1 to 100 characters                       | yes      | Name of a role in the template or the server, or "@everyone".                                               |
+| `template.categories[].overwrites[].allow`            | list of names                                     |          | Permission names to allow, e.g. ViewChannel. Default `[]`.                                                  |
+| `template.categories[].overwrites[].deny`             | list of names                                     |          | Permission names to deny, e.g. ViewChannel. Default `[]`.                                                   |
+| `template.categories[].channels`                      | list of objects                                   |          | Default `[]`.                                                                                               |
+| `template.categories[].channels[].name`               | string, 1 to 100 characters                       | yes      | Channel name. Discord lowercases text channel names and turns spaces into dashes.                           |
+| `template.categories[].channels[].type`               | `text`, `voice`, `announcement`, `stage`, `forum` |          | Default `"text"`.                                                                                           |
+| `template.categories[].channels[].topic`              | string, up to 4096 characters                     |          |                                                                                                             |
+| `template.categories[].channels[].nsfw`               | boolean                                           |          |                                                                                                             |
+| `template.categories[].channels[].slowmode_seconds`   | integer, 0 to 21600                               |          |                                                                                                             |
+| `template.categories[].channels[].overwrites`         | list of objects                                   |          | Permission overwrites. Without any, a channel in a category takes the category's permissions. Default `[]`. |
+| `template.categories[].channels[].overwrites[].role`  | string, 1 to 100 characters                       | yes      | Name of a role in the template or the server, or "@everyone".                                               |
+| `template.categories[].channels[].overwrites[].allow` | list of names                                     |          | Permission names to allow, e.g. ViewChannel. Default `[]`.                                                  |
+| `template.categories[].channels[].overwrites[].deny`  | list of names                                     |          | Permission names to deny, e.g. ViewChannel. Default `[]`.                                                   |
+| `template.channels`                                   | list of objects                                   |          | Channels outside any category. Default `[]`.                                                                |
+| `template.channels[].name`                            | string, 1 to 100 characters                       | yes      | Channel name. Discord lowercases text channel names and turns spaces into dashes.                           |
+| `template.channels[].type`                            | `text`, `voice`, `announcement`, `stage`, `forum` |          | Default `"text"`.                                                                                           |
+| `template.channels[].topic`                           | string, up to 4096 characters                     |          |                                                                                                             |
+| `template.channels[].nsfw`                            | boolean                                           |          |                                                                                                             |
+| `template.channels[].slowmode_seconds`                | integer, 0 to 21600                               |          |                                                                                                             |
+| `template.channels[].overwrites`                      | list of objects                                   |          | Permission overwrites. Without any, a channel in a category takes the category's permissions. Default `[]`. |
+| `template.channels[].overwrites[].role`               | string, 1 to 100 characters                       | yes      | Name of a role in the template or the server, or "@everyone".                                               |
+| `template.channels[].overwrites[].allow`              | list of names                                     |          | Permission names to allow, e.g. ViewChannel. Default `[]`.                                                  |
+| `template.channels[].overwrites[].deny`               | list of names                                     |          | Permission names to deny, e.g. ViewChannel. Default `[]`.                                                   |
+| `dry_run`                                             | boolean                                           |          | Only report what would be created and skipped, change nothing. Default `false`.                             |
+| `reason`                                              | string, 1 to 512 characters                       |          | Why this is being done. Shown in the server audit log.                                                      |

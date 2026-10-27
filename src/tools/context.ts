@@ -48,7 +48,9 @@ function isNotFound(error: unknown, codes: RESTJSONErrorCodes[]): boolean {
 
 /** Any channel in the server, threads included. */
 async function fetchChannel(guild: Guild, channelId: string): Promise<GuildBasedChannel> {
-  const channel = await guild.channels.fetch(channelId).catch((error: unknown) => {
+  // discord.js only updates a cached channel from gateway events, so permission overwrites changed a
+  // moment ago could still be missing from the cached copy.
+  const channel = await guild.channels.fetch(channelId, { force: true }).catch((error: unknown) => {
     if (isNotFound(error, [RESTJSONErrorCodes.UnknownChannel])) return null;
     throw error;
   });

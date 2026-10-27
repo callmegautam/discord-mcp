@@ -73,6 +73,8 @@ Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP T
 | `edit_scheduled_event`      | Change an event, or start, end or cancel it                               |
 | `delete_scheduled_event`    | Delete an event                                                           |
 | `audit_permissions`         | Flag risky permission setups, with a severity and a suggested fix         |
+| `export_template`           | Turn the server's roles, categories and channels into a JSON template     |
+| `apply_template`            | Create the roles, categories and channels a template describes            |
 
 Every tool's inputs, types and limits are listed in the [tool reference](docs/tools.md).
 
@@ -96,11 +98,54 @@ The client can attach a snapshot to the conversation, so the assistant knows the
 
 ## Prompts
 
-| Prompt                     | What it does                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `audit_server_permissions` | Runs `audit_permissions`, explains each finding and proposes fixes as tool calls, without applying them |
+| Prompt                     | What it does                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `audit_server_permissions` | Runs `audit_permissions`, explains each finding and proposes fixes as tool calls, without applying them     |
+| `setup_community_server`   | Drafts roles, categories and channels for a described community, dry runs them and applies them after a yes |
 
-`audit_permissions` checks for dangerous permissions on `@everyone`, server wide and in channel overwrites, roles and bots with Administrator, staff or log channels that everyone can see, verification level, content filter and moderator 2FA, and powerful roles the bot sits below. It only reads, so it stays available in read-only mode.
+`audit_permissions` checks for dangerous permissions on `@everyone`, server wide and in channel overwrites, roles and bots with Administrator, staff or log channels that everyone can see, verification level, content filter and moderator 2FA, and powerful roles the bot sits below. It only reads, so it stays available in read-only mode. `setup_community_server` is left out when `READ_ONLY` is on or `apply_template` is disabled.
+
+## Templates
+
+A template is one JSON object that describes a layout. Overwrites refer to roles by name, so the same template works on any server:
+
+```json
+{
+  "roles": [
+    {
+      "name": "Moderator",
+      "color": "#e67e22",
+      "hoist": true,
+      "permissions": ["KickMembers", "ManageMessages"]
+    },
+    { "name": "Member" }
+  ],
+  "categories": [
+    {
+      "name": "Staff",
+      "overwrites": [
+        { "role": "@everyone", "deny": ["ViewChannel"] },
+        { "role": "Moderator", "allow": ["ViewChannel"] }
+      ],
+      "channels": [{ "name": "mod-log" }, { "name": "mod-chat" }]
+    },
+    {
+      "name": "Community",
+      "channels": [
+        { "name": "general", "topic": "Say hi" },
+        { "name": "Lounge", "type": "voice" }
+      ]
+    }
+  ],
+  "channels": [{ "name": "welcome" }]
+}
+```
+
+`apply_template` only adds. Roles, categories and channels whose name already exists are skipped, and nothing is edited or deleted, so running it twice is safe. The whole template is checked before the first change: unknown roles in overwrites, duplicate names, fields a channel type doesn't have, Community-only channel types, and permissions the bot doesn't hold itself all fail with one error listing every problem. `dry_run: true` reports what would be created and skipped without changing anything.
+
+Roles are listed highest first and keep that order, placed just above `@everyone`. A channel without overwrites takes its category's permissions, and a channel with overwrites gets the category's plus its own, its own winning for the same role.
+
+`export_template` turns a server into a template, to save the layout to a file or copy it to another server. Bot roles, member overwrites and channel types templates don't cover are left out and listed in `notes`.
 
 ## Safety
 

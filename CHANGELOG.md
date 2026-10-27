@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-27
+
+### Added
+
+- Server templates: one JSON object describing roles, categories and channels with permission overwrites that refer to roles by name
+- `apply_template` creates what a template describes. It only adds, skips names that already exist, checks the whole template and the bot's permissions before the first change, and has a `dry_run` mode
+- `export_template` turns a server's layout into a template, leaving out bot roles, member overwrites and unsupported channel types with a note for each
+- MCP prompt `setup_community_server` that drafts a template for a described community, dry runs it and applies it after confirmation. It is left out in read-only mode and when `apply_template` is disabled
+
+### Fixed
+
+- `list_channel_permissions` and other tools that look up a channel by ID no longer return permission overwrites from before a change made a moment earlier. Channels are now fetched from Discord instead of the cache, which only catches up when the gateway event arrives (#19)
+
 ## [1.1.0] - 2026-10-26
 
 ### Added
@@ -111,7 +124,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Environment validation with clear startup errors
 - Docker image running as a non-root user, token passed at runtime through `--env-file`
 
-[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/callmegautam/discord-mcp/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/callmegautam/discord-mcp/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/callmegautam/discord-mcp/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/callmegautam/discord-mcp/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/callmegautam/discord-mcp/compare/v0.6.0...v0.7.0

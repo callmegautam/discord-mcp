@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Collection, type Guild, type GuildTextBasedChannel } from "discord.js";
-import { getMessage, loadAllMembers } from "../src/tools/context";
+import { getChannel, getMessage, loadAllMembers } from "../src/tools/context";
 
 function fakeGuild(fetch: () => Promise<unknown>) {
   return { members: { fetch } } as unknown as Guild;
@@ -43,5 +43,22 @@ describe("getMessage", () => {
     } as unknown as GuildTextBasedChannel;
     expect(await getMessage(channel, "123")).toEqual({ id: "123" } as never);
     expect(cachedDuringFetch).toBe(false);
+  });
+});
+
+describe("getChannel", () => {
+  test("asks Discord instead of trusting the cache, which lags behind overwrite changes", async () => {
+    let options: unknown;
+    const guild = {
+      name: "Test",
+      channels: {
+        fetch: async (_id: string, opts: unknown) => {
+          options = opts;
+          return { id: "123", name: "general", isThread: () => false };
+        },
+      },
+    } as unknown as Guild;
+    await getChannel(guild, "123");
+    expect(options).toEqual({ force: true });
   });
 });

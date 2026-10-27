@@ -11,6 +11,7 @@ import { registerMessageTools } from "./messages";
 import { registerModerationTools } from "./moderation";
 import { applyToolPolicy, trackTools } from "./policy";
 import { registerRoleTools } from "./roles";
+import { registerTemplateTools } from "./templates";
 import { registerThreadTools } from "./threads";
 import { registerWebhookTools } from "./webhooks";
 
@@ -31,6 +32,7 @@ export const TOOL_GROUPS: ReadonlyArray<{
   { title: "Emojis and stickers", register: registerEmojiTools },
   { title: "Scheduled events", register: registerEventTools },
   { title: "Audit", register: registerAuditTools },
+  { title: "Templates", register: registerTemplateTools },
 ];
 
 /** Registers every tool, then applies READ_ONLY and DISABLED_TOOLS. Returns the active tool names. */

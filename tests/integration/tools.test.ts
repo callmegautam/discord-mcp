@@ -544,6 +544,109 @@ describe.skipIf(!enabled)("integration", () => {
     });
   });
 
+  describe("templates", () => {
+    interface Planned {
+      name: string;
+      action: "create" | "skip";
+      id: string | null;
+    }
+    interface Applied {
+      dryRun: boolean;
+      summary: { create: number; skip: number };
+      roles: Planned[];
+      categories: (Planned & { channels: Planned[] })[];
+      channels: Planned[];
+    }
+    interface Overwrites {
+      syncedWithCategory: boolean;
+      overwrites: { id: string; name: string | null; allow: string[]; deny: string[] }[];
+    }
+
+    const mod = `${PREFIX}-tpl-mod`;
+    const template = {
+      roles: [
+        { name: mod, color: "#e67e22", hoist: true, permissions: ["ManageMessages"] },
+        { name: `${PREFIX}-tpl-member` },
+      ],
+      categories: [
+        {
+          name: `${PREFIX}-tpl-staff`,
+          overwrites: [
+            { role: "@everyone", deny: ["ViewChannel"] },
+            { role: mod, allow: ["ViewChannel"] },
+          ],
+          channels: [
+            { name: `${PREFIX}-tpl-log` },
+            {
+              name: `${PREFIX}-tpl-notes`,
+              overwrites: [{ role: mod, allow: ["ViewChannel"], deny: ["SendMessages"] }],
+            },
+          ],
+        },
+      ],
+      channels: [{ name: `${PREFIX}-tpl-welcome`, topic: "hello" }],
+    };
+
+    test("exports the server as a template that applies as a no-op", async () => {
+      const { template: exported } = await server.call<{ template: unknown }>("export_template");
+      const plan = await server.call<Applied>("apply_template", { template: exported, dry_run: true });
+      expect(plan.summary.create).toBe(0);
+      expect(plan.summary.skip).toBeGreaterThan(0);
+    });
+
+    test("dry runs without creating anything", async () => {
+      const plan = await server.call<Applied>("apply_template", { template, dry_run: true, reason });
+      expect(plan).toMatchObject({ dryRun: true, summary: { create: 6, skip: 0 } });
+      const roles = await server.call<Role[]>("list_roles");
+      expect(roles.some((role) => role.name === mod)).toBe(false);
+    });
+
+    test("applies a template, then skips everything on a rerun", async () => {
+      const applied = await server.call<Applied>("apply_template", { template, reason });
+      expect(applied).toMatchObject({ dryRun: false, summary: { create: 6, skip: 0 } });
+      const [modRole, memberRole] = applied.roles;
+      const staff = applied.categories[0]!;
+      const [log, notes] = staff.channels;
+
+      const roles = await server.call<Role[]>("list_roles");
+      const position = (id: string | null | undefined) =>
+        roles.find((role) => role.id === id)?.position ?? -1;
+      expect(position(modRole?.id)).toBeGreaterThan(position(memberRole?.id));
+      expect(roles.find((role) => role.id === modRole?.id)).toMatchObject({
+        color: "#e67e22",
+        permissions: ["ManageMessages"],
+      });
+
+      const staffPerms = await server.call<Overwrites>("list_channel_permissions", { channel_id: staff.id });
+      expect(staffPerms.overwrites.find((o) => o.id === testGuildId())?.deny).toEqual(["ViewChannel"]);
+      const logPerms = await server.call<Overwrites>("list_channel_permissions", { channel_id: log?.id });
+      expect(logPerms.syncedWithCategory).toBe(true);
+      const notesPerms = await server.call<Overwrites>("list_channel_permissions", { channel_id: notes?.id });
+      expect(notesPerms.overwrites.find((o) => o.id === testGuildId())?.deny).toEqual(["ViewChannel"]);
+      expect(notesPerms.overwrites.find((o) => o.id === modRole?.id)?.deny).toEqual(["SendMessages"]);
+
+      const rerun = await server.call<Applied>("apply_template", { template, reason });
+      expect(rerun.summary).toEqual({ create: 0, skip: 6 });
+
+      for (const channel of [log, notes, applied.channels[0], staff]) {
+        await server.call("delete_channel", { channel_id: channel?.id, reason });
+      }
+      for (const role of applied.roles) await server.call("delete_role", { role_id: role.id, reason });
+    });
+
+    test("refuses a template with an unknown role before changing anything", async () => {
+      const error = await server.fail("apply_template", {
+        template: {
+          channels: [
+            { name: `${PREFIX}-tpl-x`, overwrites: [{ role: `${PREFIX}-ghost`, allow: ["ViewChannel"] }] },
+          ],
+        },
+        reason,
+      });
+      expect(error).toContain("nothing was changed");
+    });
+  });
+
   describe("read-only mode", () => {
     test("exposes only read tools and refuses write tools", async () => {
       const readOnly = await startServer({ READ_ONLY: "true" });

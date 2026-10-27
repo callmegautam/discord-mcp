@@ -68,4 +68,22 @@ describe("createMcpServer", () => {
     expect(text).toContain("Don't change anything yet");
     expect(text).not.toContain("read-only mode");
   });
+
+  test("offers the setup prompt only when apply_template is available", async () => {
+    const names = async (env: Record<string, string> = {}) =>
+      (await (await connect(env)).listPrompts()).prompts.map((prompt) => prompt.name);
+    expect(await names()).toEqual(["audit_server_permissions", "setup_community_server"]);
+    expect(await names({ DISABLED_TOOLS: "apply_template" })).toEqual(["audit_server_permissions"]);
+  });
+
+  test("passes the community description into the setup prompt", async () => {
+    const client = await connect();
+    const { messages } = await client.getPrompt({
+      name: "setup_community_server",
+      arguments: { description: "a chess club" },
+    });
+    const text = messages[0]?.content.type === "text" ? messages[0].content.text : "";
+    expect(text).toContain("for this community: a chess club");
+    expect(text).toContain("dry_run true");
+  });
 });

@@ -140,6 +140,8 @@ describe("registerTools", () => {
       "edit_scheduled_event",
       "delete_scheduled_event",
       "audit_permissions",
+      "export_template",
+      "apply_template",
     ]);
   });
 
@@ -168,6 +170,7 @@ describe("registerTools", () => {
       "list_stickers",
       "list_scheduled_events",
       "audit_permissions",
+      "export_template",
     ]);
   });
 });

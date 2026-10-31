@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__discord__list_guilds",
+      "mcp__discord__get_guild",
+      "mcp__discord__list_channels",
+      "mcp__discord__list_channel_permissions",
+      "mcp__discord__list_roles",
+      "mcp__discord__list_role_members",
+      "mcp__discord__list_members",
+      "mcp__discord__get_member",
+      "mcp__discord__search_members",
+      "mcp__discord__list_bans",
+      "mcp__discord__get_audit_log",
+      "mcp__discord__list_messages",
+      "mcp__discord__get_message",
+      "mcp__discord__list_pinned_messages",
+      "mcp__discord__list_reactions",
+      "mcp__discord__list_threads",
+      "mcp__discord__list_invites",
+      "mcp__discord__list_webhooks",
+      "mcp__discord__list_emojis",
+      "mcp__discord__list_stickers",
+      "mcp__discord__list_scheduled_events",
+      "mcp__discord__audit_permissions",
+      "mcp__discord__export_template",
+      "mcp__discord__apply_template"
+    ]
+  }
+}

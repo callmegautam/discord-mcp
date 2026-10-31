@@ -4,6 +4,8 @@ A self-hosted [MCP](https://modelcontextprotocol.io) server that lets an AI assi
 
 Built with TypeScript, [discord.js](https://discord.js.org), the official [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) and [Bun](https://bun.sh).
 
+![Claude Code auditing a Discord server's permissions and setting up channels from a template with discord-mcp](docs/demo/demo.gif)
+
 ## Tools
 
 | Tool                        | What it does                                                              |
@@ -333,6 +335,10 @@ tests/              bun test suites, integration/ for the live server tests
 ```
 
 stdout carries the MCP protocol. Log through `src/lib/logger.ts`, which writes to stderr, never with `console.log`.
+
+## Community
+
+Built for running [The Basement](https://discord.gg/DTPcwVNN79), my Discord server for devs. Come say hi, or ask about the MCP there.
 
 ## License
 

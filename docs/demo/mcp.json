@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "discord": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--env-file",
+        "${DISCORD_MCP_ENV}",
+        "-e",
+        "DISCORD_GUILD_ID=${DEMO_GUILD_ID}",
+        "-e",
+        "ALLOWED_GUILD_IDS=${DEMO_GUILD_ID}",
+        "-e",
+        "LOG_LEVEL=warn",
+        "ghcr.io/callmegautam/discord-mcp:1"
+      ]
+    }
+  }
+}
